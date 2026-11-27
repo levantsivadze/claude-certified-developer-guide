@@ -1,107 +1,144 @@
 # Chapter 19: A Test Says It Broke; a Trace Says Where
 
-**Summary**: *Four questions run this chapter and each one asks where. Where an error's cause sits, which decides whether waiting is a remedy. Where in the run a failure happened, which only a step-by-step record answers. Where in the stack it started, your integration layer or the model's output, which is the distinction most scenarios turn on. And where in a population a measurement holds, which decides what an average may license. Get the location wrong and every remedy after it is aimed at the wrong thing.*
+**Summary**: *This chapter is about four "where" questions. Where an error's cause is, which decides whether waiting will help. Where in the run a failure happened, which only a step-by-step record can show. Where in the stack it started (your integration code or the model's output), which is what most scenarios turn on. And where in a population a measurement holds, which decides what an average can tell you. Get the location wrong and every fix after it targets the wrong thing.*
 
-## A Green Suite Is a Claim About Parts, Not About the Product
+## A Passing Suite Is a Claim About Parts, Not the Product
 
-The **retrieval function passes** its unit tests. So does the **prompt builder**, and a check confirms the model call returns the fields the parser wants. Run your flow end to end and it answers a policy question from **general knowledge** instead of from the **retrieved policy**, with **nothing raised anywhere**.
+The **retrieval function passes** its unit tests. So does the **prompt builder**, and a check confirms the model call returns the fields the parser wants. But run the flow end to end and it answers a policy question from **general knowledge** instead of the **retrieved policy**, with **no error anywhere**.
 
-The **join broke**. Retrieval hands back a **list of records**, the builder expects text, and the assembled prompt carries something the model reads as noise. Both components are correct. **Nobody wrote the contract** between them, so nothing exercised it.
+The **join** broke. Retrieval returns a **list of records**; the builder expects **text**; the prompt ends up containing something the model reads as noise. Both components are correct. **Nobody wrote the contract** between them, so nothing tested it.
 
-Every check observes a **bounded field of view**: one function, one call, one flow, one number. A failure is findable only by a check whose field of view contains it. A **seam belongs to neither component** beside it, so it sits inside nobody's until you build a check whose **field of view is the seam**.
+Every check sees a **limited field of view**: one function, one call, one flow, one number. A failure can only be found by a check that can see it. A **seam belongs to neither component**, so nothing sees it until you build a check **aimed at the seam**.
 
-**Coverage counted in components** is the anti-pattern, and the count is what makes it convincing. Every part is covered. The **joins are not parts**.
+> **Example.** An integration test that feeds the prompt builder the **real output** of the retrieval function (a list of records, not a hand-made string) and asserts that the resulting prompt contains the policy text would have caught this in seconds.
 
-## An Error's Bucket Is Where Its Cause Lives, Not Which Status Code Carried It
+The anti-pattern is **coverage counted by component**. Every part is covered. The **joins aren't parts**.
 
-One question sorts every failure your application throws. Could the **clock alone change the outcome**?
+## An Error's Category Is Where Its Cause Is, Not Its Status Code
 
-If yes, the cause sits in the **state of the world**. Capacity, load, a per-minute limit, a dropped connection. The documented shapes are **`429` rate limits**, **`529` overloads**, **5xx server faults** and **timeouts**.<sup>[1]</sup> Waiting is a **real remedy** for those alone.
+One question sorts every failure: **could waiting alone change the outcome?**
 
-If no, the **cause sits in the request**. A malformed body, a revoked key, a permission the credential lacks, a resource that is not there: **`400`**, **`401`**, **`403`**, **404**.<sup>[1]</sup> Every later send returns the **identical error**. **Repair** it or **reject** it, and neither of those is a retry.
+- **Yes**: the cause is the **state of the world**: capacity, load, a per-minute limit, a dropped connection. Typical shapes: **`429`** rate limits, **`529`** overloads, **5xx** server errors and **timeouts**.<sup>[1]</sup> **Waiting is a real fix** for these, and these only.
+- **No**: the cause is the **request**: a malformed body, a revoked key, a missing permission, a resource that doesn't exist (**`400`, `401`, `403`, `404`**).<sup>[1]</sup> Sending it again returns the **same error**. **Fix it or reject it**; don't retry.
 
-That mapping is a hypothesis. Two documented cases break it in opposite directions. A **spend-cap `429` carries no `retry-after`** and keeps failing until access resumes,<sup>[1]</sup> the same status in the other bucket, with the **missing header as the tell**. A request too large for the context runs the other way: Claude Code **lowers `max_tokens`** and sends a different request rather than repeating one that **fails identically**.<sup>[2]</sup>
+The status code is only a **first guess**. Documented cases break the mapping both ways:
 
-The **status code read as the diagnosis** is the anti-pattern. The code proposes a cause; the header, the message and the request ID settle it.<sup>[1]</sup>
+- A **`429` from hitting your usage tier's monthly spend cap** has **no `retry-after` header** and keeps failing until access resumes.<sup>[1]</sup> Same status, other category; the **missing header is the clue**.
+- A **spend limit you set** on your organisation or workspace returns a **`400`**, not a `429` (except Claude Code workspace limits, which may return `429`).<sup>[1]</sup>
+- A request **too large for the context window** won't succeed if sent unchanged. Claude Code **reduces `max_tokens`** and sends a different request.<sup>[2]</sup>
+- On a **streaming** request, an error can arrive **after a `200` response** has started, so status-code handling alone misses it.<sup>[1]</sup>
 
-## Misclassifying Costs Silence in One Direction and Noise in the Other
+The official SDKs **already retry** connection errors, rate limits and 5xx errors with exponential backoff, **twice by default**, honouring `retry-after`; `max_retries` changes or disables that.<sup>[1]</sup> The anti-pattern is **reading the status code as the diagnosis**. The code suggests a cause; the **header, message and request ID** confirm it.
 
-Call a **terminal failure retriable** and every attempt is **guaranteed to fail**. Your **budget drains**. The real error surfaces late wearing the shape of slowness, and on a rate limit each attempt **deepens the limit** that caused it. Call a **retriable failure terminal** and a condition that would have cleared in seconds reaches a person as a **broken feature**. That one gets **reported the same day**. The first looks like latency and runs for months, so terminal is the **cheaper guess** when the cause is unclear.
+## Misclassifying Costs Silence One Way and Noise the Other
 
-A second question sits underneath and it is not the same one. Has **anything already happened**? **Retriability** is a **property of the cause**; **safety** is a property of what a **first attempt committed**. Claude Code will not re-issue a request that failed after Claude had completed a tool call, because the retry would **run those calls twice**.<sup>[2]</sup> Any retry crossing a **boundary that writes** is a second write unless the write is **idempotent**.
+The two mistakes cost differently:
 
-Where recovery stops is a routing decision, and retry mechanics themselves belong to chapter 2. **Impact and recoverability predict** whether a person must act now, where **one severity predicts nothing**.
+- **Treating a permanent failure as temporary**: every retry is **guaranteed to fail**. Your budget drains, the real error shows up late looking like slowness, and on a rate limit each retry **makes it worse**. This can run for **months**.
+- **Treating a temporary failure as permanent**: something that would have cleared in seconds reaches a user as a **broken feature**. It gets **reported the same day**.
 
-## A Trace Records Each Step, and It Gets Built Before the Failure
+So when the cause is unclear, **treat it as permanent**: it's the cheaper mistake.
 
-A **test reports** that a failure exists. Nothing in a pass or a fail says which step produced it. A **trace is that missing record**: every step of the run with its **prompt**, its **tool calls**, its **intermediate output** and its **timing**, so the **failing step** is visible instead of reconstructed.
+There's a second, separate question: **has anything already happened?** Whether to retry depends on the **cause**. Whether it's **safe** to retry depends on what the first attempt **already did**. Claude Code won't re-send a request that failed **after Claude completed a tool call**, because that would **run the tool calls twice**.<sup>[2]</sup> Any retry past a step that **writes** is a second write, unless the write is **idempotent**.
 
-The Agent SDK shows the shape worth copying. Each **turn of the loop** is a span, each API call a child span carrying **model name, latency and token counts**, each tool invocation a child span with the **permission wait separated** from the execution, and a **subagent's spans nest** under the parent's tool span so a delegation chain reads as one trace.<sup>[3]</sup>
+> **Example.** An agent calls `create_refund`, the tool succeeds, and then the connection drops before Claude's next message arrives. Re-sending the whole request would ask Claude to decide again and could issue a **second refund**. The safe approach: keep the completed tool result, continue from there, and give `create_refund` an idempotency key so a duplicate call is ignored.
 
-Two properties decide what that record is good for. **Telemetry is structural by default**, carrying **durations, model names and tool names** but not the **content** the agent reads and writes, which is **opt-in**,<sup>[3]</sup> so the default trace says which step and how long and never what was said. And **export fails quietly**. An **unreachable collector** leaves the agent running and the **telemetry dropped**, with no error raised in your application.<sup>[3]</sup> The instrument has the same failure mode as the thing it watches.
+Retry mechanics are covered in chapter 2. When deciding who to alert, **impact and recoverability** predict whether a person must act now; a single severity label for every error predicts nothing.
 
-## The Model's Output Is the Line, and You Read It Before Blaming Either Side
+## A Trace Records Each Step, and You Build It Before the Failure
 
-Go to the trace and **read what the model returned**, before anything downstream touched it. Three readings exhaust the cases.
+A **test tells you** a failure exists. It doesn't tell you **which step** caused it. A **trace** does: it records every step of the run with its **prompt**, **tool calls**, **intermediate output** and **timing**, so the failing step is visible instead of guessed.
 
-| What the trace shows | Where the fault is | What changes |
+The Agent SDK's OpenTelemetry support shows the shape:<sup>[3]</sup>
+
+- Each **turn** of the agent loop is a span.
+- Each **API call** is a child span with **model name, latency and token counts**.
+- Each **tool call** is a child span, with **waiting for permission** separated from **execution**.
+- A **subagent's spans nest** under the parent's tool span, so a delegation chain reads as one trace.
+
+Two properties decide what that record is good for:<sup>[3]</sup>
+
+- **Telemetry is structural by default.** It records durations, model names and tool names, but **not the content** the agent reads and writes; content is **opt-in**. The default trace tells you which step and how long, not what was said.
+- **Export fails silently.** If the collector is unreachable, the agent keeps running and the telemetry is **dropped**, with no error in your application. Monitor the monitor.
+
+## Read the Model's Output Before Blaming Either Side
+
+Open the trace and **read what the model returned**, before anything downstream touched it. There are three possibilities:
+
+| What the trace shows | Where the fault is | What to change |
 |---|---|---|
-| Returned content is what was wanted, and the system did the wrong thing with it | Below the model | The parser, the handoff, the tool wrapper, the dispatcher |
-| Returned content is wrong, and the input was truncated, malformed or missing its retrieved context | Still below the model | The step that built the input |
-| Returned content is wrong, and the input arrived complete and well formed | The model's output | Examples, constraint, prompt, model choice |
+| The output is what you wanted, but the system did the wrong thing with it | **Below the model** | The parser, handoff, tool wrapper or dispatcher |
+| The output is wrong, and the **input** was truncated, malformed or missing its retrieved context | **Still below the model** | The step that built the input |
+| The output is wrong, and the input was **complete and well formed** | **The model's output** | Examples, constraints, prompt, model choice |
 
-The **middle row costs teams weeks**. It presents as a model failure, and every remedy aimed at the model leaves it standing. Hence the rule: a **model failure** is a model failure only after you have **read the input the model received**. **Read what was sent**, never the template meant to produce it. Configuration debugging runs the same two steps: confirm the **instruction reached the context window**, because once it has, the problem is how it is written.<sup>[4]</sup>
+The **middle row costs teams weeks**. It looks like a model failure, and every fix aimed at the model leaves it in place. So the rule: it's a **model failure only after you've read the input the model actually received**. Read what was **sent**, not the template that was supposed to produce it.
 
-A failure crossing a boundary **carries its identity or loses** it. Chapter 6 covers the tool-result half, where **`is_error`** lets the model react to a failure it would otherwise read as data.<sup>[5]</sup> The generalisation belongs here: one message standing for an **invalid identifier**, an **expired token**, a **timeout** and a **policy refusal** has discarded the distinctions recovery runs on. **Recovery can be no more specific** than the error reaching it.
+> **Example.** A support bot gives wrong refund amounts. The team spends a week rewriting the prompt. The trace shows the order lookup tool's result was cut off at 4,000 characters by a wrapper, so the line items the model needed never arrived. The fix is in the wrapper, and the original prompt was fine.
 
-## An Average Is Only a Fact About the Population It Averaged
+Configuration debugging works the same way: first confirm the instruction **reached the context window** (in Claude Code, `/context` shows what's loaded). If it did, the problem is **how it's written**.<sup>[4]</sup>
 
-An **eval** is the check whose field of view is the **whole run's output**. It cannot say where **anything broke**. What it answers is narrower and nothing else answers it: did your **change help**, on a **fixed set of cases**.
+A failure crossing a boundary **keeps its identity or loses it**. Chapter 9 covers tool results, where **`is_error`** tells the model a result is a failure, not data.<sup>[5]</sup> The general rule: one message that stands for an **invalid ID**, an **expired token**, a **timeout** and a **policy refusal** has thrown away the differences recovery depends on. **Recovery can only be as specific as the error that reaches it.**
 
-Build for **coverage before rubric**. Anthropic's guidance is that **20 to 50 tasks** drawn from **real failures** make a good start, and that cases where a behaviour should occur and cases where it should not both belong.<sup>[6]</sup> A **judge** returns a confident-looking number. It means nothing until its **agreement with expert human judgement** has been measured and recalibrated as things move.<sup>[6]</sup> Ambiguity in a task specification becomes **noise in the metric**, so the standard for a case is that **two domain experts** reach the same verdict independently.<sup>[6]</sup>
+## An Average Is Only True of the Population It Averaged
 
-Then granularity. An **overall figure licenses nothing** about any segment inside it. Slicing by category requires the **record to carry the category**, because nothing can be measured along an **axis the data does not hold**, which makes adding that field your first move whenever performance differs by group. A flat average is also consistent with a change that **repaired one group and broke another**, which is why you read the per-case results rather than the mean alone.
+An **eval** looks at the **whole run's output**. It can't tell you **where** something broke. It answers a narrower question nothing else answers: **did your change help**, on a **fixed set of cases**?
 
-## How Wrong Answers Are Built on This Material
+**Build for coverage before polishing the rubric**:<sup>[6]</sup>
 
-Wrong answers on diagnosis are **competent engineering** aimed one step **too early** or one level **too coarse**. Four assumptions produce most of them.
+- **20 to 50 tasks** drawn from **real failures** is a good start.
+- Include cases where a behaviour **should** happen and cases where it **shouldn't**.
+- A good task is one where **two domain experts** would independently give the same pass or fail. **Ambiguity in a task becomes noise** in the metric.
+- A **model judge** gives a confident-looking number that means nothing until you've **measured its agreement with expert human labels**, and kept recalibrating it. Read the transcripts and grades yourself.
 
-- A **remedy applied before the cause is located**. **Lowering a sampling setting**, **swapping the model**, **raising a threshold**, **adding a validator**. Each is a real fix offered while the **failing step is unknown**, and correct only once the scenario has isolated the break.
-- A **distinction collapsed rather than restored**. **One severity for every error**, **one message for every backend fault**, **one confidence cut** for every outcome, an **empty result** standing in for a failure. The scenario usually names the collapse as the symptom, and the option offering more of it reads as **tidying**.
-- An **aggregate offered where a segment was named**. A **global threshold**, one **overall accuracy figure**, **review spread evenly across categories**. All are right when the **population is uniform**, which the scenario has usually just denied.
-- **Repetition where the request itself has to change**. **Retrying a rejection**, **duplicating requests** against a rate limit, **retrying unbounded**, adding a **fresh credential** to a throttle. Correct only where **time was the variable** that could move.
+Then **granularity**. An **overall score tells you nothing** about any group inside it. To slice by category, **the record must carry the category**: you can't measure along an axis the data doesn't hold. So when performance seems to differ by group, **adding that field comes first**. A flat average can also hide a change that **fixed one group and broke another**, which is why you read **per-case results**, not just the mean.
+
+> **Example.** A ticket classifier scores 91% before and 91% after a prompt change. Broken down by category, billing went from 80% to 95%, and security went from 97% to 70%. The average said "no change". The per-category view says "ship the billing fix, revert the security regression".
+
+## How the Exam Builds Wrong Answers
+
+Wrong answers here are competent engineering aimed **one step too early** or **one level too coarse**. Four assumptions produce most of them.
+
+- **A fix applied before the cause is found.** Swapping the model, raising a threshold, adding a validator, tweaking a setting. Each is a real fix offered while the **failing step is unknown**. It's right only once the scenario has isolated the break.
+- **A distinction collapsed instead of restored.** One severity for every error, one message for every backend fault, one confidence cutoff for every outcome, an empty result standing in for a failure. The scenario usually names the collapse as the symptom; the option offering more of it looks like tidying.
+- **An aggregate where a segment was named.** A global threshold, one overall accuracy figure, review spread evenly across categories. All fine when the **population is uniform**, which the scenario has usually just said it isn't.
+- **Repetition where the request must change.** Retrying a rejection, duplicating requests against a rate limit, retrying without limit, adding a new credential to beat a throttle. Right only when **time** was the thing that could change.
 
 | When the scenario says | The answer is usually | The trap is usually |
 |---|---|---|
-| A status names a temporary pacing or capacity condition | Back off with a cap, honouring the wait the service supplies | A fresh credential, a duplicated request, or dropping the failing check |
-| The same request sometimes succeeds and sometimes fails | Capture full input and output on both sides, then compare | Changing a parameter, counting the frequency, or filing it as expected |
-| Every component passes its tests and the flow is wrong | Exercise the handoff with real output from the producing step | More component tests, or the model blamed for the result |
-| One overall figure is quoted and errors are known to cluster by category | Record the category on each item, measure per category, sample inside the clusters | A global threshold, acting on the aggregate, or reviewing only low-confidence items |
-| Part of a job failed and the rest succeeded | Report the failed part: what was attempted, the failure type, any partial result | Returning empty, aborting everything, or retrying unbounded |
+| A status shows a temporary rate or capacity problem | Back off with a cap, honouring `retry-after` | A new credential, duplicate requests, or removing the check |
+| A `429` has no `retry-after` and never clears | Treat it as a spend cap: stop and alert, don't retry | Retrying with longer backoff |
+| The same request sometimes succeeds and sometimes fails | Capture full input and output for both, then compare | Changing a parameter, or calling it expected |
+| Every component passes its tests but the flow is wrong | Test the handoff with real output from the producing step | More component tests, or blaming the model |
+| The model "gets it wrong" but nobody has looked at the trace | Read the input the model actually received | Rewriting the prompt or switching models |
+| One overall score is quoted and errors cluster by category | Record the category, measure per category, sample within clusters | A global threshold, or reviewing only low-confidence items |
+| Part of a job failed and the rest succeeded | Report the failed part: what was tried, the error type, any partial result | Returning empty, aborting everything, or retrying without limit |
 
-One **habit transfers** past the table. For any option offered as a fix, ask what it would have to **observe** to be right, then check whether **anybody in the scenario is observing** it.
+One habit works beyond the table: for any proposed fix, ask what it would need to **observe** to be right, then check whether **anyone in the scenario is observing it**.
 
 ## What to Remember
 
-- Every check has a **field of view**, the **bounded span of the run** it can see: one function, one call, one flow, one number. A **seam sits inside neither component**, so a suite where **every part passes** claims something about **parts, not about the product**.
-- One **question sorts** an error: could the **clock alone change the outcome**. Yes is a **transient cause** where **waiting** is the remedy, as in **`429`, `529`, 5xx and timeouts**; no puts the cause in the **request**, leaving **repair or rejection**, as in **`400`, `401`, `403` and `404`**. The status only **proposes a cause**: a **spend-cap `429` carries no `retry-after`** and **never clears** on its own.
-- The two misclassifications **cost differently**. **Terminal treated as retriable drains the budget**, **delays** the real error and **deepens a rate limit**; **retriable treated as terminal** shows a **broken feature** and gets **fixed the same day**, so raise it as **terminal when unsure**. Separately, **retriability** is a property of the **cause** and **safety** is a property of what **already happened**: a retry across a **boundary that writes** is a **second write** unless it is **idempotent**.
-- A **trace records each step** with its **prompt, tool calls, intermediate output and timing**, turning "a **case failed**" into "**step four failed**, and here is what it received". Default telemetry is **structural**, holding **durations, model and tool names** but **no content** until content is **opted** in.
-- **Isolate origin** by reading what the **model returned** before anything downstream touched it. **Right output, wrong behaviour** is the **integration layer**, and so is **wrong output** from a **truncated or malformed input**. Only wrong output from a **complete, well-formed input** answers to **prompts, examples or model choice**.
-- A **failure crossing a boundary carries its identity** or loses it, and **recovery is no more specific** than the error reaching it: one message covering an **invalid identifier**, an **expired token**, a **timeout** and a **refusal** has **discarded what recovery runs** on.
-- An **eval measures** whether a change helped, never where it **broke**. **Coverage beats rubric polish**: **20 to 50 cases** drawn from **real failures**, including cases where the **behaviour should not occur**, and a **judge means nothing** until its agreement with **human labels is measured**.
-- An **average** is only a fact about the **population it averaged**. Nothing can be **sliced along an axis** the **record does not carry**, so **record the category** first and **read the per-case results**, because a **steady mean** hides a **repair to one group** and a break in another.
+- Every check has a **field of view**. A **seam belongs to neither component**, so all-green component tests prove things about **parts, not the product**. Test the seams with real output.
+- Ask: **could waiting change the outcome?** Yes → **`429`, `529`, 5xx, timeouts**: back off. No → **`400`, `401`, `403`, `404`**: fix or reject.
+- **Status codes are a first guess.** A **spend-cap `429` has no `retry-after`** and never clears on its own; a spend limit **you** set returns **`400`**; streaming errors can arrive **after a `200`**.
+- SDKs **retry transient errors twice by default**, honouring `retry-after`.
+- **Permanent treated as temporary** drains budget silently for months; **temporary treated as permanent** gets reported the same day. **When unsure, treat it as permanent.**
+- **Retriable** is about the **cause**; **safe** is about what **already happened**. A retry after a write is a **second write** unless it's **idempotent**.
+- A **trace** records each step's **prompt, tool calls, output and timing**. Default telemetry is **structural, no content**; export **fails silently**.
+- **Read what the model returned and what it received.** Right output, wrong behaviour → integration. Wrong output from bad input → integration. Wrong output from good input → prompt, examples or model.
+- **Recovery is only as specific as the error that reaches it.** Don't collapse error types into one message.
+- An **eval** shows whether a change helped, not where it broke. Start with **20–50 cases from real failures**, include **should-not** cases, and **calibrate any model judge** against human labels.
+- **Averages hide segments.** **Record the category**, measure per category, and **read per-case results**.
 
 ## Endnotes for this chapter
 
-1. The Claude API returns a predictable set of HTTP error codes: `400` `invalid_request_error`, `401` `authentication_error`, `402` `billing_error`, `403` `permission_error`, `404` `not_found_error`, `409` `conflict_error`, `413` `request_too_large`, `429` `rate_limit_error`, `500` `api_error`, `504` `timeout_error` and `529` `overloaded_error`; a `429` raised by reaching a usage tier's spend cap carries no `retry-after` header and keeps failing until access resumes; the official SDKs automatically retry transient failures such as connection errors, rate limits and 5xx server errors with exponential backoff, twice by default, honouring the `retry-after` header when present, and each SDK client accepts a maximum-retries option to configure or disable that behaviour; every API response carries a unique `request-id` header, and the same identifier appears as the `request_id` field in error response bodies for tracking and debugging. Anthropic, *Claude API errors* (Claude Platform Docs, accessed 2026-09-09), [https://platform.claude.com/docs/en/api/errors](https://platform.claude.com/docs/en/api/errors)
+1. The Claude API returns `400` `invalid_request_error`, `401` `authentication_error`, `402` `billing_error`, `403` `permission_error`, `404` `not_found_error`, `409` `conflict_error`, `413` `request_too_large`, `429` `rate_limit_error`, `500` `api_error`, `504` `timeout_error` and `529` `overloaded_error`. A `429` can mean a rate limit, the usage tier's monthly spend cap, or a Claude Code workspace spend limit; a tier spend-cap `429` has no `retry-after` header and keeps failing until access resumes. Reaching a spend limit you set for an organisation or workspace returns a `400`, except on a Claude Code workspace. The official SDKs retry transient failures (connection errors, rate limits, 5xx) with exponential backoff, twice by default, honouring `retry-after`, configurable with `max_retries`. With streaming, errors can occur after a `200` response has begun. Every response carries a `request-id` header, also returned as `request_id` in error bodies. Anthropic, *Claude API errors* (Claude Platform Docs, accessed 2026-11-27), [https://platform.claude.com/docs/en/api/errors](https://platform.claude.com/docs/en/api/errors)
 
-2. Claude Code retries transient failures up to 10 times with exponential backoff before showing an error, covering server errors, overloaded responses, request timeouts, dropped connections and temporary `429` throttles; a request rejected because the input plus `max_tokens` exceeds the context limit would fail the same way if re-sent unchanged, so Claude Code retries with a reduced `max_tokens` instead; it does not retry a TLS certificate validation failure, nor a server error, dropped connection or stalled stream arriving after Claude has completed a block of text or a tool call, because re-running the request could execute the same tool calls twice, so it keeps what Claude completed, shows an incomplete-response notice and continues the turn from the results of any tool calls Claude completed. Anthropic, *Error reference* (Claude Code Docs, accessed 2026-09-09), [https://code.claude.com/docs/en/errors](https://code.claude.com/docs/en/errors)
+2. Claude Code retries transient failures up to 10 times with exponential backoff; when input plus `max_tokens` exceeds the context limit, it retries with a reduced `max_tokens`; it does not retry a server error, dropped connection or stalled stream arriving after Claude has completed a block of text or a tool call, because re-running could execute the same tool calls twice, and instead keeps what was completed and continues. Anthropic, *Error reference* (Claude Code Docs, accessed 2026-09-09; not re-checked for this edition), [https://code.claude.com/docs/en/errors](https://code.claude.com/docs/en/errors)
 
-3. With enhanced telemetry enabled, each step of the agent loop becomes a span: `claude_code.interaction` wraps a single turn from prompt to response, `claude_code.llm_request` wraps each call to the Claude API with model name, latency and token counts as attributes, `claude_code.tool` wraps each tool invocation with child spans for the permission wait and the execution itself, and `claude_code.hook` wraps each hook execution; when the agent spawns a subagent, the subagent's `llm_request` and `tool` spans nest under the parent agent's `claude_code.tool` span so the full delegation chain appears as one trace; telemetry is structural by default, recording durations, model names and tool names on every span, with token counts recorded when the underlying API request returns usage data, while the content the agent reads and writes is not recorded unless opt-in variables are set, which the documentation advises leaving unset unless the observability pipeline is approved to store that data; the CLI fails silently on export errors by default, so an unreachable or rejecting endpoint leaves the agent running normally while the telemetry is dropped with no error surfaced in the application. Anthropic, *Observability with OpenTelemetry* (Claude Code Docs, accessed 2026-09-09), [https://code.claude.com/docs/en/agent-sdk/observability](https://code.claude.com/docs/en/agent-sdk/observability)
+3. With enhanced telemetry, each agent loop turn is a `claude_code.interaction` span; each API call is a `claude_code.llm_request` span with model name, latency and token counts; each tool call is a `claude_code.tool` span with child spans for permission wait and execution; subagent spans nest under the parent's tool span. Telemetry is structural by default, and content is recorded only with opt-in variables; export errors fail silently, dropping telemetry with no error in the application. Anthropic, *Observability with OpenTelemetry* (Claude Code Docs, accessed 2026-09-09; not re-checked for this edition), [https://code.claude.com/docs/en/agent-sdk/observability](https://code.claude.com/docs/en/agent-sdk/observability)
 
-4. The `/context` command shows everything occupying the context window for the current session, including memory files and skills, and is the first check on whether a `CLAUDE.md` file, rule or skill description is present at all; if `/context` confirms the file loaded but a particular instruction is still not followed, the issue is likely how the instruction is written rather than whether it loaded; settings merge across managed, user, project and local scopes with command-line flags and environment variables acting as a further override layer, so when a setting does not seem to apply the value set is usually being overridden by another scope or an environment variable. Anthropic, *Debug your configuration* (Claude Code Docs, accessed 2026-09-09), [https://code.claude.com/docs/en/debug-your-config](https://code.claude.com/docs/en/debug-your-config)
+4. `/context` shows everything in the context window, including memory files and skills, and is the first check on whether an instruction loaded; if it loaded but isn't followed, the issue is likely how it's written. Anthropic, *Debug your configuration* (Claude Code Docs, accessed 2026-09-09; not re-checked for this edition), [https://code.claude.com/docs/en/debug-your-config](https://code.claude.com/docs/en/debug-your-config)
 
-5. A `tool_result` block carries an optional `is_error` field, set to true when the tool execution resulted in an error, and Claude uses the returned tool result to continue generating its response to the original prompt. Anthropic, *Handle tool calls* (Claude Platform Docs, accessed 2026-09-09), [https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls](https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls)
+5. A `tool_result` block has an optional `is_error` field, set to true when the tool execution failed. Anthropic, *Handle tool calls* (Claude Platform Docs, accessed 2026-09-09; not re-checked for this edition), [https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls](https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls)
 
-6. Anthropic's guidance on building evaluations for agents states that 20 to 50 simple tasks drawn from real failures is a good start, that both the cases where a behaviour should occur and the cases where it should not should be tested, that a good task is one where two domain experts would independently reach the same pass or fail verdict, that ambiguity in task specifications becomes noise in metrics, that model-based rubrics should be frequently calibrated against expert human judgement, and that graders cannot be known to work well without reading the transcripts and grades from many trials; it distinguishes measuring whether at least one of several attempts produces a correct result from measuring whether all of them do. Anthropic, *Demystifying evals for AI agents* (Anthropic Engineering, accessed 2026-09-09), [https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)
+6. 20 to 50 simple tasks drawn from real failures is a good start; test both cases where a behaviour should occur and where it shouldn't; a good task is one where two domain experts would independently agree on pass or fail; ambiguity becomes noise in metrics; model-based rubrics should be calibrated against expert human judgement, and graders can't be trusted without reading transcripts and grades from many trials. Anthropic, *Demystifying evals for AI agents* (Anthropic Engineering, accessed 2026-09-09; not re-checked for this edition), [https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)
