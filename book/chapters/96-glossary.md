@@ -1,6 +1,6 @@
 # Glossary
 
-**Summary:** *Two kinds of entry, and they fail differently. The names this book gives to recurring shapes exist so you can recognise a pattern in a scenario written about an industry nobody here has mentioned. The platform terms exist because their definitions are exact, items are built on the difference between two of them, and being approximately right about one is the same as being wrong. Chapter references point at where each is argued rather than merely used.*
+**Summary:** *There are two kinds of entry. The first are names this book gives to patterns that keep coming up, so you can spot them in a scenario about any industry. The second are platform terms with exact meanings; exam questions are often built on the difference between two of them, so being nearly right is the same as being wrong. Chapter references point to where each term is explained, not just mentioned.*
 
 ## Names This Book Gives to Recurring Shapes
 
@@ -52,7 +52,13 @@ The **writable channel** (ch. 20). Everything an injected instruction can reach:
 
 ## Platform Terms Whose Exact Meaning Decides Items
 
-**Adaptive thinking**. The model judging how much visible reasoning a request warrants, rather than a caller setting a token budget for it. On the newest models an explicit `budget_tokens` value is not supported and returns a `400`, and effort is a separate output-level setting (ch. 1, ch. 17).
+**Adaptive thinking**. The model decides how much reasoning a request needs, instead of you setting a token budget. On the newest models an explicit `budget_tokens` value returns a `400`, and effort is a separate output-level setting (ch. 1, ch. 4, ch. 17).
+
+**API version**. The `anthropic-version` header, required on every request; it fixes the request and response contract, separately from the model ID. The current version is `2026-10-21`, which removes `temperature`, `top_p` and `top_k`. New SDK major versions send it by default, so an SDK upgrade can change behaviour (ch. 2, ch. 17).
+
+**Bare mode**. `claude --bare -p ...` runs Claude Code without loading the host's hooks, skills, plugins, MCP servers, auto memory or `CLAUDE.md`, so a scripted or CI run behaves the same on every machine (ch. 17).
+
+**Compaction**. Summarising older conversation turns server-side when the context passes a threshold (150K tokens by default), so a long task can continue. Different from context clearing, which drops old tool results (ch. 7).
 
 **Agent SDK**. Anthropic's implementation of the agent loop, with the tool-calling cycle, context handling, permissions and session management already built. Adopting it deletes roughly sixty lines and installs a set of assumptions in their place (ch. 13).
 
@@ -70,15 +76,17 @@ The **writable channel** (ch. 20). Everything an injected instruction can reach:
 
 **MCP configuration scope**. Who loads a server, and nothing else. `local` is private to one project, `project` lives in a committed `.mcp.json` and reaches everyone who clones the repository, and `user` is private to you across every project (ch. 10).
 
-**MCP transport**. How the client reaches the server, decided by process locality. A server documented with a command to run uses stdio, one documented with a URL uses HTTP or SSE, and tools written in the application's own code use an in-process server with no transport at all (ch. 10, ch. 11).
+**MCP transport**. How the client reaches the server, decided by where the server runs. A local process uses stdio; a remote server uses Streamable HTTP (the older HTTP+SSE transport is deprecated); tools in the application's own code use an in-process server with no transport. The 2026-07-28 MCP spec also makes the protocol stateless: each request carries its own protocol version and capabilities (ch. 10, ch. 11).
 
 **Messages API**. The synchronous request path, and stateless. The full conversational history goes up on every call, no handle identifies a conversation, and anything absent from the request is absent from the model's view (ch. 3, ch. 16).
 
 **Plugin**. Skills, agents, hooks and MCP servers bundled into one versioned installable unit, which is how a chosen set travels to a team. Plugin skills are namespaced with the plugin's name so two plugins can ship a skill of the same name (ch. 11).
 
-**Prompt caching**. Charging a reduced rate for a prefix seen before. Prefixes assemble in one order, tools then system then messages, and a change at any level invalidates that level and everything after it. The five-minute duration writes at 1.25x input price and the hour at 2x (ch. 8).
+**Prompt caching**. Charging a reduced rate for a prefix seen before. Prefixes are built in one order (tools, then system, then messages), and a change at any level invalidates that level and everything after it. Five-minute cache writes cost 1.25x input price and one-hour writes 2x; reads cost 0.05x on Opus 5.5 and Sonnet 5.5, 0.025x on Fable 5.2, and 0.1x on other models. The minimum cacheable prefix is 512 tokens on current models (ch. 8).
 
 **Permission mode**. The standing setting deciding what Claude Code may do without asking. A resumed session restores it with named exceptions: plan mode and bypass mode are never restored, so a resumed session starts where a new one would (ch. 14, ch. 16).
+
+**Task budget**. A beta setting (`output_config.task_budget`) that tells the model how many tokens it has for a whole agentic task, so it can plan its work. Only the model sees it; it isn't a hard billing cap (ch. 8).
 
 **`stop_reason`**. The field saying why generation ended, and the one place several silent failures are visible. A refusal arrives as a `200` response carrying `stop_reason: "refusal"`, and a `max_tokens` truncation arrives as a `200` as well (ch. 2, ch. 6).
 
@@ -88,8 +96,14 @@ The **writable channel** (ch. 20). Everything an injected instruction can reach:
 
 **`Retry-After`**. The header saying when to try again. Its absence carries information: a `429` raised by a spend cap carries no such header and keeps failing until access is restored, so retrying it turns a billing problem into an outage (ch. 2).
 
+**Service account**. A Claude Platform identity for a workload, with its own roles and audit trail, so systems don't share one person's key (ch. 22).
+
 **Skill**. A packaged procedure Claude loads and follows, as against a tool it calls. It carries knowledge about how work gets done and cannot reach a system holding live state on its own (ch. 11).
 
+**Structured outputs**. Constrained decoding that guarantees a response matches your JSON schema. It guarantees the shape, not that the values are true, and it can't be combined with citations (ch. 6).
+
 **Subagent**. A unit running in its own context-isolated thread, with its own model, system prompt, tools, connected servers and skills. It starts empty and inherits no Skills from its parent, so whatever the next stage needs has to be written into the launching prompt (ch. 7, ch. 11, ch. 12).
+
+**Workload Identity Federation (WIF)**. Authenticating a workload with a short-lived token exchanged from its own identity provider (GitHub Actions, AWS, Google Cloud, Entra ID, Kubernetes), so there's no static API key to store or rotate. A leftover `ANTHROPIC_API_KEY` takes precedence and silently overrides it (ch. 22).
 
 **Zero-shot, one-shot and few-shot**. Three prompting modes separated by how many worked examples the prompt carries. Zero-shot describes the task and supplies none. Examples cost input tokens on every call, which makes the choice a priced one (ch. 1).

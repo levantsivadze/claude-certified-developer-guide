@@ -1,24 +1,20 @@
 # Coverage Map
 
-**Summary:** *Every skill on the published blueprint, its weight, and the chapter that
-owns it. Use this to find the chapter behind a weakness rather than reading in order. The
-weights are the blueprint's own and they are published per skill rather than per domain,
-which is finer than most exams give you. Spend an evening looking at them before you
-decide where the rest of your evenings go.*
+**Summary:** *Every skill on the published exam blueprint, its weight, and the chapter that covers it. Use it to find the chapter behind a weak spot instead of reading in order. The blueprint gives a weight for each skill, not just each domain, so it's worth a few minutes deciding where to spend your study time.*
 
 ## Domain 1: Agents and Workflows
 
 | Skill | Weight | Owned by |
 |---|---|---|
-| **1.1** Agent Architecture | 4.5% | Chapter 12, *Known Steps Take a Chain; Unknown Ones an Agent* |
+| **1.1** Agent Architecture | 4.5% | Chapter 12, *Known Steps Need a Chain; Unknown Steps Need an Agent* |
 | **1.2** Agent Construction with Claude | 5.3% | Chapter 13, *The Loop, the Harness, and What You Stop Owning* |
-| **1.3** Agent Patterns and Frameworks | 4.9% | Chapter 12, *Known Steps Take a Chain; Unknown Ones an Agent* |
+| **1.3** Agent Patterns and Frameworks | 4.9% | Chapter 12, *Known Steps Need a Chain; Unknown Steps Need an Agent* |
 
 ## Domain 2: Applications and Integration
 
 | Skill | Weight | Owned by |
 |---|---|---|
-| **2.1** Understanding Requirements | 3.4% | Chapter 15, *The Constraints Nobody States Decide the Design* |
+| **2.1** Understanding Requirements | 3.4% | Chapter 15, *The Constraints Nobody Mentions Decide the Design* |
 | **2.2** Systems Life Cycle | 2.8% | Chapter 23, *Deploy Is a Phase Boundary, Not the End* |
 | **2.3** Claude API Mechanics | 6.8% | Chapter 3, *Messages, Streaming, Batches: Who Is Waiting Decides* |
 | **2.4** Software Engineering Foundations | 7.4% | Chapter 17, *REST, Versioning, Review: the Exam Beyond Claude* |
@@ -29,7 +25,7 @@ decide where the rest of your evenings go.*
 
 | Skill | Weight | Owned by |
 |---|---|---|
-| **3.1** Claude Code Operation | 3.1% | Chapter 14, *Permission Modes and Where the Human Gate Goes* |
+| **3.1** Claude Code Operation | 3.1% | Chapter 14, *Permission Modes, and Where the Human Check Goes* |
 
 ## Domain 4: Eval, Testing, and Debugging
 
@@ -41,18 +37,18 @@ decide where the rest of your evenings go.*
 
 | Skill | Weight | Owned by |
 |---|---|---|
-| **5.1** LLM Fundamentals | 5.2% | Chapter 1, *What This Exam Tests That an Interview Does Not* |
+| **5.1** LLM Fundamentals | 5.2% | Chapter 1, *What This Exam Tests That an Interview Doesn't* |
 | **5.2** Technical Fundamentals | 6.1% | Chapter 2, *Four Parts to Every Call, and Three Places It Breaks* |
 | **5.3** Model Selection and Tradeoffs | 2.7% | Chapter 4, *Choosing a Model Starts With Three Numbers* |
-| **5.4** Cost and Token Management | 2.8% | Chapter 8, *Cost Follows What You Resend, Not What You Ask* |
+| **5.4** Cost and Token Management | 2.8% | Chapter 8, *Cost Comes From What You Resend, Not What You Ask* |
 
 ## Domain 6: Prompt and Context Engineering
 
 | Skill | Weight | Owned by |
 |---|---|---|
-| **6.1** Context Engineering | 3.8% | Chapter 7, *The Window Is a Budget, and Everything Competes* |
-| **6.2** Prompt Engineering | 4.6% | Chapter 5, *Instruction Placement Is a Trust Decision* |
-| **6.3** Output Handling | 2.6% | Chapter 6, *Schema-Valid Is Not the Same as Correct* |
+| **6.1** Context Engineering | 3.8% | Chapter 7, *The Context Window Is a Budget, and Everything Competes for It* |
+| **6.2** Prompt Engineering | 4.6% | Chapter 5, *Where You Put an Instruction Is a Trust Decision* |
+| **6.3** Output Handling | 2.6% | Chapter 6, *Valid Format Doesn't Mean Correct* |
 
 ## Domain 7: Security and Safety
 
@@ -67,15 +63,13 @@ decide where the rest of your evenings go.*
 
 | Skill | Weight | Owned by |
 |---|---|---|
-| **8.1** Tool Implementation | 4.4% | Chapter 9, *The Description Is the Input, Not the Documentation* |
-| **8.2** MCP Server Development | 2.1% | Chapter 10, *One Server, Many Clients, Transport by Locality* |
-| **8.3** Agentic Customization | 4.1% | Chapter 11, *Four Mechanisms, Decided by What Must Execute* |
+| **8.1** Tool Implementation | 4.4% | Chapter 9, *The Tool Description Is Input, Not Documentation* |
+| **8.2** MCP Server Development | 2.1% | Chapter 10, *One Server, Many Clients, Transport Chosen by Location* |
+| **8.3** Agentic Customization | 4.1% | Chapter 11, *Four Mechanisms, Chosen by What Has to Run* |
 
 ## Where the Weight Is
 
-Reading order follows the order you meet the decisions, not the blueprint, so a domain is
-spread across the book rather than gathered into one place. If you are rationing time,
-these are the numbers that should drive it. Domain 2 is worth thirteen of Domain 4.
+The chapters follow the order you meet decisions in real work, not the blueprint, so a domain is spread across several chapters. If your time is limited, let these numbers decide where it goes. Domain 2 is worth about thirteen times Domain 4.
 
 | Domain | Weight | Chapters covering it |
 |---|---|---|
@@ -90,26 +84,25 @@ these are the numbers that should drive it. Domain 2 is worth thirteen of Domain
 
 ## Every Chapter, in Order, With What It Owns
 
-The other direction, for when you know which chapter you are in and want to know what it
-is answerable for.
+The other direction: for when you're in a chapter and want to know which skills it covers.
 
 | Ch | Title | Skills | Exam weight |
 |---|---|---|---|
-| 1 | What This Exam Tests That an Interview Does Not | 5.1 | 5.2% |
+| 1 | What This Exam Tests That an Interview Doesn't | 5.1 | 5.2% |
 | 2 | Four Parts to Every Call, and Three Places It Breaks | 5.2 | 6.1% |
 | 3 | Messages, Streaming, Batches: Who Is Waiting Decides | 2.3 | 6.8% |
 | 4 | Choosing a Model Starts With Three Numbers | 5.3 | 2.7% |
-| 5 | Instruction Placement Is a Trust Decision | 6.2 | 4.6% |
-| 6 | Schema-Valid Is Not the Same as Correct | 6.3 | 2.6% |
-| 7 | The Window Is a Budget, and Everything Competes | 6.1 | 3.8% |
-| 8 | Cost Follows What You Resend, Not What You Ask | 5.4 | 2.8% |
-| 9 | The Description Is the Input, Not the Documentation | 8.1 | 4.4% |
-| 10 | One Server, Many Clients, Transport by Locality | 8.2 | 2.1% |
-| 11 | Four Mechanisms, Decided by What Must Execute | 8.3 | 4.1% |
-| 12 | Known Steps Take a Chain; Unknown Ones an Agent | 1.1, 1.3 | 9.4% |
+| 5 | Where You Put an Instruction Is a Trust Decision | 6.2 | 4.6% |
+| 6 | Valid Format Doesn't Mean Correct | 6.3 | 2.6% |
+| 7 | The Context Window Is a Budget, and Everything Competes for It | 6.1 | 3.8% |
+| 8 | Cost Comes From What You Resend, Not What You Ask | 5.4 | 2.8% |
+| 9 | The Tool Description Is Input, Not Documentation | 8.1 | 4.4% |
+| 10 | One Server, Many Clients, Transport Chosen by Location | 8.2 | 2.1% |
+| 11 | Four Mechanisms, Chosen by What Has to Run | 8.3 | 4.1% |
+| 12 | Known Steps Need a Chain; Unknown Steps Need an Agent | 1.1, 1.3 | 9.4% |
 | 13 | The Loop, the Harness, and What You Stop Owning | 1.2 | 5.3% |
-| 14 | Permission Modes and Where the Human Gate Goes | 3.1 | 3.1% |
-| 15 | The Constraints Nobody States Decide the Design | 2.1 | 3.4% |
+| 14 | Permission Modes, and Where the Human Check Goes | 3.1 | 3.1% |
+| 15 | The Constraints Nobody Mentions Decide the Design | 2.1 | 3.4% |
 | 16 | Boundaries, Sessions, and Where Instructions Land | 2.5 | 8.6% |
 | 17 | REST, Versioning, Review: the Exam Beyond Claude | 2.4 | 7.4% |
 | 18 | An Unpinned Version Is an Untracked Change | 2.6 | 4.1% |

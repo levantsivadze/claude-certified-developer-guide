@@ -4,11 +4,18 @@
 
 ### What the Exam Actually Asks You to Build
 
-A practitioner guide for the Anthropic **CCDV-F** certification: 23 chapters, around 75K words, covering all 25 skills across the eight exam domains. Request mechanics and failure seams, model and thinking settings, prompt placement, structured output, context and cost, tools and MCP servers, agents and Claude Code, application design, configuration, tracing, prompt injection, guardrails, secrets, and what happens after deploy.
+A practitioner guide for the Anthropic **CCDV-F** certification: 23 chapters, around 85K words, covering all 25 skills across the eight exam domains. Request mechanics and failure seams, model and thinking settings, prompt placement, structured output, context and cost, tools and MCP servers, agents and Claude Code, application design, configuration, tracing, prompt injection, guardrails, secrets, and what happens after deploy.
 
 The editorial position is this: nearly every wrong answer on this exam is a mechanism that works perfectly well somewhere else. A Skill where a server was needed, a context file where a hook was needed, a retry where the failure was permanent. So knowing that a mechanism exists is worth very little, and knowing what it is for is worth almost everything. The book argues each choice to the point where the boundary between two mechanisms is visible, on the theory that reasoning transfers to a scenario nobody has seen and a memorised feature list does not.
 
 The other thing worth knowing before you start: **a third of this exam is not about Claude.** Domain 2 alone is 33.1% and covers REST semantics, versioning, review discipline and application boundaries. Domain 4, on evaluation, testing and debugging, is 2.6%. That is a thirteen-fold spread, and a reader who budgets study time by how interesting a topic looks will spend their evenings in the wrong place.
+
+> **This edition (November 2026).** A revised edition of [vkorost's original guide](https://github.com/vkorost/claude-certified-developer-guide), with two goals:
+>
+> - **Up to date.** Facts were re-checked against Anthropic's documentation in November 2026. Changes include API version `2026-10-21` (sampling parameters removed), Claude Opus 5.5, Sonnet 5.5 and Fable 5.2, new cache-read pricing and the 512-token cache minimum, task budgets, compaction, the stateless MCP spec (2026-07-28), the removal of forced `tool_choice` on current models, Workload Identity Federation and service accounts, data residency details, Claude Code's `auto` permission mode and `--bare` flag, and the updated API error behaviour. Endnotes that were re-checked say "accessed 2026-11-27"; the rest say "not re-checked for this edition".
+> - **Easier to read.** Shorter sentences, plainer words, less bold, and worked examples added throughout. Structure, exam coverage and chapter order are unchanged; some chapter titles were simplified.
+>
+> The "Tested" note below refers to the original author's exam.
 
 > **Tested.** I sat CCDV-F on 14 September 2026 and [passed](https://www.credly.com/earner/earned/badge/a7e99fb7-93cb-44c9-bc7e-176ce5e860cf). There were no other books, tutorials or courses.
 
@@ -32,7 +39,7 @@ Every chapter below links to its Markdown source. The PDF and EPUB carry the sam
 
 **Part I. What this exam is asking**
 
-1. [What This Exam Tests That an Interview Does Not](./book/chapters/01-what-the-exam-is-actually-testing.md)
+1. [What This Exam Tests That an Interview Doesn't](./book/chapters/01-what-the-exam-is-actually-testing.md)
 
 **Part II. The call, and the model behind it**
 
@@ -42,26 +49,26 @@ Every chapter below links to its Markdown source. The PDF and EPUB carry the sam
 
 **Part III. Getting an answer you can use**
 
-5. [Instruction Placement Is a Trust Decision](./book/chapters/05-prompts-that-hold-their-shape.md)
-6. [Schema-Valid Is Not the Same as Correct](./book/chapters/06-output-a-program-can-consume.md)
-7. [The Window Is a Budget, and Everything Competes](./book/chapters/07-context-as-a-budget.md)
-8. [Cost Follows What You Resend, Not What You Ask](./book/chapters/08-cost-and-tokens.md)
+5. [Where You Put an Instruction Is a Trust Decision](./book/chapters/05-prompts-that-hold-their-shape.md)
+6. [Valid Format Doesn't Mean Correct](./book/chapters/06-output-a-program-can-consume.md)
+7. [The Context Window Is a Budget, and Everything Competes for It](./book/chapters/07-context-as-a-budget.md)
+8. [Cost Comes From What You Resend, Not What You Ask](./book/chapters/08-cost-and-tokens.md)
 
 **Part IV. Giving Claude something to do**
 
-9. [The Description Is the Input, Not the Documentation](./book/chapters/09-tools-claude-selects-correctly.md)
-10. [One Server, Many Clients, Transport by Locality](./book/chapters/10-mcp-servers.md)
-11. [Four Mechanisms, Decided by What Must Execute](./book/chapters/11-built-in-custom-skill-or-mcp.md)
+9. [The Tool Description Is Input, Not Documentation](./book/chapters/09-tools-claude-selects-correctly.md)
+10. [One Server, Many Clients, Transport Chosen by Location](./book/chapters/10-mcp-servers.md)
+11. [Four Mechanisms, Chosen by What Has to Run](./book/chapters/11-built-in-custom-skill-or-mcp.md)
 
 **Part V. Agents, and what you stop owning**
 
-12. [Known Steps Take a Chain; Unknown Ones an Agent](./book/chapters/12-workflow-or-agent.md)
+12. [Known Steps Need a Chain; Unknown Steps Need an Agent](./book/chapters/12-workflow-or-agent.md)
 13. [The Loop, the Harness, and What You Stop Owning](./book/chapters/13-building-the-agent.md)
-14. [Permission Modes and Where the Human Gate Goes](./book/chapters/14-claude-code-as-a-configured-tool.md)
+14. [Permission Modes, and Where the Human Check Goes](./book/chapters/14-claude-code-as-a-configured-tool.md)
 
 **Part VI. The application around the model**
 
-15. [The Constraints Nobody States Decide the Design](./book/chapters/15-requirements-before-architecture.md)
+15. [The Constraints Nobody Mentions Decide the Design](./book/chapters/15-requirements-before-architecture.md)
 16. [Boundaries, Sessions, and Where Instructions Land](./book/chapters/16-designing-the-application.md)
 17. [REST, Versioning, Review: the Exam Beyond Claude](./book/chapters/17-the-engineering-around-the-model.md)
 18. [An Unpinned Version Is an Untracked Change](./book/chapters/18-configuration-as-a-tracked-artifact.md)
@@ -134,7 +141,18 @@ The book itself was assembled with Claude Code using techniques described in [we
 - [**PDF**](https://github.com/vkorost/claude-certified-developer-guide/releases/latest/download/Claude-Certified-Developer-Foundations.pdf) - for offline reading and print.
 - [**EPUB**](https://github.com/vkorost/claude-certified-developer-guide/releases/latest/download/Claude-Certified-Developer-Foundations.epub) - for e-readers.
 
-Both are attached to the [latest release](https://github.com/vkorost/claude-certified-developer-guide/releases/latest) and always point at the current revision. The book is corrected in place instead of re-versioned, so these links do not go stale.
+Both are attached to the original author's [latest release](https://github.com/vkorost/claude-certified-developer-guide/releases/latest), which is the **original edition**.
+
+To build an EPUB of **this edition** yourself (requires [pandoc](https://pandoc.org/)):
+
+```bash
+pandoc book/chapters/*.md -o Claude-Certified-Developer-Foundations.epub \
+  --toc --toc-depth=1 --split-level=1 \
+  --epub-cover-image=book/Claude-Certified-Developer-Foundations-Cover.jpg \
+  --metadata title="Claude Certified Developer – Foundations (CCDV-F)" \
+  --metadata subtitle="What the Exam Actually Asks You to Build — Updated Edition, November 2026" \
+  --metadata lang=en-GB
+```
 
 ## What's in this repo
 
@@ -149,7 +167,7 @@ The documentation vaults, the pipeline, and the working files are not published.
 
 ## Coverage cutoff
 
-Documentation sources were consulted through September 2026, and the exam guide is the current published version. The Claude platform, Claude Code and MCP are under active development, and the model lineup in particular moves faster than any book about it. The text documents behaviour as of its writing date. Verify time-sensitive claims against current documentation before relying on them for a production decision or for the exam.
+The original edition consulted documentation through September 2026. This edition re-checked the time-sensitive facts against the documentation in November 2026. The Claude platform, Claude Code and MCP are under active development, and the model lineup in particular moves faster than any book about it. The text documents behaviour as of its writing date. Verify time-sensitive claims against current documentation before relying on them for a production decision or for the exam.
 
 ## AI assistance, scope of
 
