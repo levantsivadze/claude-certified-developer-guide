@@ -43,7 +43,7 @@ decide where the rest of your evenings go.*
 |---|---|---|
 | **5.1** LLM Fundamentals | 5.2% | Chapter 1, *What This Exam Tests That an Interview Does Not* |
 | **5.2** Technical Fundamentals | 6.1% | Chapter 2, *Four Parts to Every Call, and Three Places It Breaks* |
-| **5.3** Model Selection and Tradeoffs | 2.7% | Chapter 4, *A Model Choice Is Three Numbers You Were Not Given* |
+| **5.3** Model Selection and Tradeoffs | 2.7% | Chapter 4, *Choosing a Model Starts With Three Numbers* |
 | **5.4** Cost and Token Management | 2.8% | Chapter 8, *Cost Follows What You Resend, Not What You Ask* |
 
 ## Domain 6: Prompt and Context Engineering
@@ -98,7 +98,7 @@ is answerable for.
 | 1 | What This Exam Tests That an Interview Does Not | 5.1 | 5.2% |
 | 2 | Four Parts to Every Call, and Three Places It Breaks | 5.2 | 6.1% |
 | 3 | Messages, Streaming, Batches: Who Is Waiting Decides | 2.3 | 6.8% |
-| 4 | A Model Choice Is Three Numbers You Were Not Given | 5.3 | 2.7% |
+| 4 | Choosing a Model Starts With Three Numbers | 5.3 | 2.7% |
 | 5 | Instruction Placement Is a Trust Decision | 6.2 | 4.6% |
 | 6 | Schema-Valid Is Not the Same as Correct | 6.3 | 2.6% |
 | 7 | The Window Is a Budget, and Everything Competes | 6.1 | 3.8% |

@@ -38,7 +38,7 @@ Every chapter below links to its Markdown source. The PDF and EPUB carry the sam
 
 2. [Four Parts to Every Call, and Three Places It Breaks](./book/chapters/02-how-a-request-reaches-claude.md)
 3. [Messages, Streaming, Batches: Who Is Waiting Decides](./book/chapters/03-the-api-surface-you-will-be-asked-about.md)
-4. [A Model Choice Is Three Numbers You Were Not Given](./book/chapters/04-choosing-a-model.md)
+4. [Choosing a Model Starts With Three Numbers](./book/chapters/04-choosing-a-model.md)
 
 **Part III. Getting an answer you can use**
 
