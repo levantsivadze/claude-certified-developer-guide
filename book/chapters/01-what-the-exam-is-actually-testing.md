@@ -10,7 +10,7 @@ The natural reaction is to open a bug ticket. Surely something upstream changed:
 
 Usually nothing changed. The model **generates one token at a time**, and each token is **sampled** from a set of candidates, not looked up. Two runs can pick different tokens at any point and then continue differently from there. Anthropic says this directly: even with temperature set to 0, results are **not fully deterministic**, and identical inputs can produce different outputs.<sup>[1]</sup>
 
-On current models you can't even set the temperature. Starting with Claude Opus 4.7, setting `temperature`, `top_p` or `top_k` to anything but the default returns a `400` error, and every current model follows that rule.<sup>[2]</sup> So "turn the temperature down" isn't an option any more. Even on older models where it was, it reduced variation but never removed it.
+On current models you can't even set the temperature. Starting with Claude Opus 4.7, setting `temperature`, `top_p` or `top_k` to anything but the default returns a `400` error, and every current model follows that rule.<sup>[2]</sup> API version `2026-10-21` goes further: it removes all three parameters, so sending them returns a `400` on every model, even at their default values. So "turn the temperature down" isn't an option any more. Even on older models where it was, it reduced variation but never removed it.
 
 People reading the output don't notice the rewording. A **parser** does, and so does any later step that expected a field where a sentence now sits.
 
