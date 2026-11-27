@@ -1,110 +1,133 @@
 # Chapter 23: Deploy Is a Phase Boundary, Not the End
 
-**Summary**: *A release date is a completion criterion for the development work and for nothing else. What opens at go-live runs until the system is switched off, and it holds three jobs the build phase never had: watching the numbers, answering when they move, and planning around a dependency that retires on a schedule nobody on the team sets. This chapter covers the arc a Claude application moves through and the gates between its phases, which is where a decision to proceed gets made and, occasionally, refused.*
+**Summary**: *A release date marks the end of development and nothing else. What starts at go-live runs until the system is switched off, and it has three jobs the build phase never had: watching the numbers, responding when they move, and planning around dependencies that change on schedules your team doesn't set. This chapter covers the phases a Claude application moves through and the gates between them, where a decision to proceed is made and, sometimes, refused.*
 
 ## Go-Live Closes One Calendar and Opens One With No End Date
 
-The **release goes out**. Internal teams pick it up the same week. The **board empties**, the build channel goes quiet, and the humans who wrote the thing get **assigned somewhere else**.
+The **release goes out**. Internal teams start using it that week. The **board empties**, the build channel goes quiet, and the people who wrote it are **assigned elsewhere**.
 
-Something genuinely ended there. Development had a **scope, a definition of done and a date**, and all three were satisfied. What started in the same hour has **none of the three**, and it runs for as long as the system is in use.
+Something really did end. Development had a **scope**, a **definition of done** and a **date**, and all three were met. What started in the same hour has **none of the three**, and it lasts as long as the system is in use.
 
-Call it the **standing phase**: the stretch that **opens at go-live**, **covers operation and maintenance**, and carries **no completion criterion**, because a system humans depend on never stops needing to be watched, answered for and moved forward.
+Call it the **standing phase**: it **opens at go-live**, covers **operation and maintenance**, and has **no completion criterion**, because a system people depend on always needs to be **watched, answered for and moved forward**.
 
-A scenario will put you at exactly that hour and ask what your **next stretch of work** is. Every option will describe something real. One names a **single activity** that genuinely happens after a launch. One describes who **holds the system** rather than what happens to it. One skips to the end of its life. Only one of the four **runs on the system's clock**.
+A scenario will put you at exactly that moment and ask what the **next stage of work** is. Every option will describe something real:
 
-## A Gate That Cannot Refuse Anything Is Not a Gate
+- One names a **single activity** that does happen after launch (a retrospective, a launch review).
+- One describes **who owns** the system, not what happens to it.
+- One skips to the **end of its life**.
+- Only one **runs as long as the system does**. That's the answer.
 
-Between any two phases sits a **decision to move forward**, and it is worth having only when you are allowed to answer no. No is available only where **something concrete is being checked**.
+## A Gate That Can't Refuse Anything Isn't a Gate
 
-That is also why **gates get skipped**. A **checkpoint costs** you a day the schedule did not carry, and the **day is visible** while what it would have caught is not.
+Between any two phases is a **decision to move forward**. It's only worth having if you're allowed to say **no**, and "no" is only possible when **something concrete is being checked**.
 
-| What the gate looks at | What it refuses to let through | What ships when nobody looks |
+That's also why gates get skipped. A checkpoint **costs a day** the schedule didn't plan for, and that day is **visible**, while what it would have caught **isn't**.
+
+| What the gate checks | What it refuses to let through | What ships when nobody checks |
 |---|---|---|
-| A constraint with no named source behind it | A platform chosen on familiarity | A deployment nobody can defend at review |
-| A build the current eval has never scored | Promotion to production traffic | A regression nobody can attribute to anything |
-| A model reference that moves without a change record | An unrecorded pin | An upstream release nobody logged |
-| Metrics not emitting, with no name attached to the alert | Go-live itself | A failure whose first reporter is a user |
-| A production finding with no requirement it contradicts | Closing the ticket | Folklore held by whoever was on shift |
+| A constraint with no named source | A platform chosen out of habit | A deployment nobody can defend at review |
+| A build the current eval has never scored | Promotion to production traffic | A regression nobody can trace |
+| A model reference that changes without a record | An unrecorded pin | An upstream change nobody logged |
+| Metrics not emitting; no owner on the alert | Go-live itself | A failure first reported by a user |
+| A production finding not linked to the requirement it contradicts | Closing the ticket | Knowledge held by whoever was on shift |
 
-The right-hand column is the real subject. A **skipped gate ships a system** that works on the day and cannot be **reasoned about months later**, by humans who were never in the room.
+The right-hand column is the real subject. A **skipped gate** ships a system that **works on the day** and **can't be reasoned about months later** by people who weren't in the room.
 
-**Deployment treated as a completion milestone** is the anti-pattern this chapter sits against, and it is not laziness. It is a calendar built by people whose **work genuinely does finish**, handed to people whose work does not.
+The anti-pattern is **deployment treated as the finish line**. It isn't laziness. It's a calendar built by people whose **work really does finish**, handed to people whose work doesn't.
 
-## The Standing Phase Holds Three Jobs, and Only One of Them Is Debugging
+## The Standing Phase Has Three Jobs, and Only One Is Debugging
 
-**Instrumentation comes first**, because nothing else in the phase is possible without it. From your first day of production traffic, **emit three quantities**: what **each call costs**, how long it takes, and how often it fails.
+### 1. Instrument from day one
 
-Cost **telemetry is an estimate**. Claude Code's exported cost metric is documented as an approximation, with **official billing data** coming from the API provider rather than the exporter.<sup>[1]</sup> Trend it and alert on it. Do not **settle a finance question** against it.
+From the first day of production traffic, **record three things**: **cost per call**, **latency**, and **failure rate**.
 
-The failure count is worse, because it under-reports in the direction that looks like health. A **refusal arrives on a successful response stream** rather than as an HTTP error, so the **API error event does not fire** for one, and a **separate refusal event** exists so refusal frequency can be tracked at all.<sup>[2]</sup> An error rate built from **transport failures stays flat** while a growing share of responses return nothing the caller can use.
+**Cost telemetry is an estimate.** Claude Code's exported cost metric is documented as an approximation; **official billing data** comes from the API provider (the Claude Console, Bedrock or Google Cloud), not the exporter.<sup>[1]</sup> Use it for **trends and alerts**, not to settle a finance question.
 
-The second job is that somebody **answers when a number moves**. Instrumentation with **no name attached** is a dashboard, and a dashboard only records what went wrong.
+**Failure counts under-report**, and in the direction that looks healthy. A **refusal** (`stop_reason: "refusal"`) arrives on a **successful response**, not as an HTTP error, so the **API error event doesn't fire** for it. A **separate refusal event** exists so you can track refusal frequency.<sup>[2]</sup> An error rate built only from transport failures stays **flat** while a growing share of responses give the caller **nothing usable**.
 
-The third job is **planned evolution**, **under-planned** because nothing in a **deployed configuration** looks like it is moving.
+> **Example.** A document assistant's dashboard shows a steady 0.3% error rate for a month. Meanwhile refusals on one document category climb from 1% to 9% after a content change upstream. Users complain; the dashboard says everything's fine. Counting refusals as their own metric would have shown the trend in the first week.
 
-## Your Dependency Retires on Somebody Else's Calendar
+The same applies to your own API code: check **`stop_reason`** on every response, not just the HTTP status.
 
-Most **dependencies sit still** until you move them. A model does not.
+### 2. Someone answers when a number moves
 
-The pin is real, and it is worth knowing exactly what you get. A **model ID identifies a pinned version**, and the underlying model stays constant for the **lifetime of that ID**; the guarantee attaches to the ID, not to the **convenience aliases** the API accepts for some earlier models.<sup>[3]</sup> That **holds the behaviour steady**. It does not hold the model available.
+Instrumentation with **no name attached** to its alerts is a dashboard, and a dashboard only records what went wrong. Every alert needs an **owner**.
 
-Anthropic **retires older models** as newer ones launch, notifies customers with active deployments at least **60 days before retirement** for publicly released models, and **fails requests sent after the retirement date**.<sup>[4]</sup> **Partner-operated platforms** set their own retirement schedules, so a model's status and dates on **Amazon Bedrock or Google Cloud** can differ from the ones governing Anthropic-operated platforms.<sup>[4]</sup> Read one calendar while deployed against the other and you hold an expiry date nobody on the team has seen.
+### 3. Planned evolution
 
-The **dependency assumed frozen** produces a specific failure: a migration **run as an incident**, on a deadline set elsewhere, in the week it turns urgent. The alternative is a planned backlog item with an **owner and a date** inside the notice window. Migration between current models is **mostly drop-in**, and what you check is narrow: **features no longer available**, **changed thinking behaviour, refusal behaviour** that differs between targets.<sup>[5]</sup>
+This is the job most often **under-planned**, because nothing in a deployed configuration **looks** like it's moving.
 
-Whether the replacement holds is answered by an **evaluation suite scored against the baseline** the **outgoing version** set. Building it is chapter 19's material; pinning is chapter 18's. A team that built neither cannot say what a **forced upgrade** cost it.
+## Your Dependencies Change on Someone Else's Calendar
 
-## A Finding That Never Reaches the Requirements Is Folklore
+Most dependencies stay still until you move them. A model doesn't.
 
-Production tells you things the test set could not. Which **inputs actually arrive**. Which instruction **humans read differently** from how it was written. Where the **cost concentrates**.
+The pin is real, and it's worth knowing exactly what it gives you. A **model ID identifies a pinned version**, and the model stays the same **for the life of that ID**. The guarantee covers **IDs**, not the **convenience aliases** the API accepts for some older models.<sup>[3]</sup> That keeps **behaviour steady**. It doesn't keep the model **available**.
 
-Those findings have one useful destination, and an **incident channel** is not it. Iteration means a production observation **travels back to the requirement it contradicts** and re-enters the arc as a change with a gate in front of it. Left where it landed, it becomes knowledge held by **whoever was on shift**, surviving until that person changes team.
+- Anthropic **retires older models** as newer ones launch, gives customers with active deployments **at least 60 days' notice** for publicly released models, and **requests after the retirement date fail**.<sup>[4]</sup>
+- **Partner platforms set their own retirement dates**, so a model's status on **Amazon Bedrock** or **Google Cloud** can differ from Anthropic's.<sup>[4]</sup> If you deploy on one and read the other's calendar, you have an expiry date nobody on the team has seen.
 
-The end of the arc carries an obligation that outlives the switch-off. Retention clocks run on their own terms: **local session transcripts** are stored for **six years by default**, or for an **organization's custom conversation retention period** where a finite one is set, and **Activity Feed data** is retained for six years.<sup>[6]</sup> Decommissioning stops the traffic and **settles nothing already stored**.
+> **Example.** On 30 September 2026, Anthropic notified developers using Claude Sonnet 4.5 of its upcoming retirement on the Claude API.<sup>[4]</sup> A team that pinned `claude-sonnet-4-5-20250929` and had an owner watching deprecation notices put "migrate summariser to current Sonnet" in the next sprint, with time to run evals. A team that didn't found out when requests started failing.
 
-## How Wrong Answers Are Built on This Material
+**The API itself moves too.** In October 2026, Anthropic released API version **`2026-10-21`**, and new SDK major versions send it by default, so a routine dependency upgrade can change request behaviour (chapter 17).
 
-Lifecycle distractors are **unusually reasonable**. Almost every one names something a **competent team** really does, often in the same week the scenario is set. What makes one wrong is a **category error** about what **kind of object** it is.
+The **dependency assumed frozen** causes a specific failure: a migration **run as an incident**, on a deadline set elsewhere, in the week it becomes urgent. The alternative is a **planned backlog item with an owner and a date** inside the notice window.
 
-- A **single activity promoted to a phase**. A **launch review, a retrospective**, a **load test, a handover document**: **all real, all finite**. A phase is a **container holding many activities** across an **open-ended stretch**. The tell is a **completion date offered** as the answer to a question about where the system now lives. It becomes correct where the scenario **asks what to schedule next week**.
-- **Ownership offered as lifecycle progress**. **Transferring the system to a platform team**, **splitting it across two groups**, hiring for it. All three answer who does the work, and the **work is unchanged** by every one of them. It becomes correct where the question is about **responsibility, escalation or staffing**.
-- The **dependency assumed frozen**. Any option treating the **deployed configuration as stable ground**, with **change arriving only when the team chooses** it. **Retirement dates and provider schedules** move underneath a **system nobody touched**. It becomes correct only where the version in use is under the **team's sole control**.
-- A **phase skipped** because its **evidence is not yet uncomfortable**. **Shipping before an eval scores the build**, **going live before metrics emit**, **closing a finding** without routing it. Each is defensible in the moment and each removes an answer somebody needs later.
+Migration between current models is **mostly drop-in**. Check a narrow list: **features no longer available**, **changed thinking behaviour**, and **refusal behaviour** that differs between models.<sup>[5]</sup> Whether the replacement holds up is answered by an **eval suite scored against the outgoing version's baseline** (chapter 19). Pinning is chapter 18. A team with neither can't say what a forced upgrade cost them.
+
+## A Finding That Never Reaches the Requirements Is Just Folklore
+
+Production teaches you things the test set couldn't: which **inputs actually arrive**, which instruction **people read differently** than intended, where the **cost concentrates**.
+
+Those findings have one useful destination, and the **incident channel isn't it**. Iteration means a production finding **goes back to the requirement it contradicts** and re-enters the cycle as a **change with a gate in front of it**. Left where it landed, it's knowledge held by **whoever was on shift**, and it lasts until that person changes teams.
+
+> **Example.** On-call notices that customers often paste screenshots instead of text, and the bot ignores them. Logged as "known issue" in the incident tracker, it's forgotten in a month. Routed back as a requirement ("accept image attachments and extract order numbers from them"), it gets an eval case, a design change, and a gate before it ships.
+
+The end of the system's life has an obligation that **outlives the switch-off**. Retention runs on its own clock: **local Claude Code and Cowork session transcripts** are kept for **six years by default**, or the organisation's configured finite retention period, and **Activity Feed data** is kept for six years.<sup>[6]</sup> Decommissioning **stops the traffic** and **settles nothing already stored**.
+
+## How the Exam Builds Wrong Answers
+
+Lifecycle distractors are **very reasonable**. Almost every one names something a competent team really does, often in the same week as the scenario. What makes one wrong is a **category error** about what kind of thing it is.
+
+- **A single activity promoted to a phase.** A launch review, a retrospective, a load test, a handover document: all real, all **finite**. A phase is a **container** for many activities over an **open-ended** period. The tell: a **completion date** offered as the answer to where the system now lives. It's right when the scenario asks **what to schedule next week**.
+- **Ownership offered as lifecycle progress.** Handing the system to a platform team, splitting it between two groups, hiring for it. These answer **who** does the work; the work itself doesn't change. Right when the question is about **responsibility, escalation or staffing**.
+- **The dependency assumed frozen.** Any option that treats the deployed configuration as **stable ground**, with change arriving only when the team chooses. Retirement dates, API versions and provider schedules move under a system **nobody touched**. Right only where the version in use is under the team's **sole control**.
+- **A phase skipped because its evidence isn't uncomfortable yet.** Shipping before an eval scores the build, going live before metrics emit, closing a finding without routing it. Each is defensible in the moment; each removes an answer someone needs later.
 
 | When the scenario says | The answer is usually | The trap is usually |
 |---|---|---|
-| A system has just entered production use and the next stage of work is in question | The ongoing stretch that opens at go-live: watch it, answer for it, plan its evolution | A finite activity, a staffing arrangement, or the end of its life |
-| A new version is ready and production traffic is the next step | Score it against the baseline before promoting it | Promoting first and watching production for the difference |
-| Nobody can say what a live system costs or how often it fails usefully | Emit cost, latency and failure, and check what the failure count counts | Reasoning from the last load test, or from a count that omits refusals |
-| A notice, a retirement date or a provider schedule appears anywhere | Planned work with an owner and a date inside the notice window | Deferring until the date forces an unplanned migration |
-| Something learned in production needs to go somewhere | Back into the requirement it contradicts, as a change that faces a gate | Logging it in an incident record and considering it handled |
-| A checkpoint is being skipped to hold a date | Name what it would have refused | Accepting the schedule argument, which always sounds stronger |
+| A system has just gone live; what's the next stage of work? | The ongoing phase: watch it, answer for it, plan its evolution | A finite activity, a staffing change, or decommissioning |
+| A new version is ready and production is next | Score it against the baseline before promoting | Promoting first and watching production for differences |
+| Nobody knows what a live system costs or how often it really fails | Emit cost, latency and failures; check what the failure count includes | Reasoning from the last load test, or a count that omits refusals |
+| A deprecation notice, retirement date or provider schedule appears | Planned work with an owner and a date inside the notice window | Waiting until the date forces an emergency migration |
+| Something learned in production needs to go somewhere | Back to the requirement it contradicts, as a gated change | Logging it in an incident record and calling it done |
+| A checkpoint is being skipped to hit a date | Name what it would have refused | Accepting the schedule argument, which always sounds stronger |
+| The system is being switched off | Stop traffic and handle stored data under its retention rules | Assuming decommissioning deletes everything |
 
-One habit carries past the table. Ask of each option **whether it terminates**. An **activity finishes**, an **ownership arrangement holds steady**, a retirement closes the file. Exactly one thing on a lifecycle list **runs as long as the system** does, and whenever a scenario has just described a launch, that is what it points at.
+One habit works beyond the table: ask of each option **whether it ends**. An **activity finishes**, an **ownership arrangement holds steady**, decommissioning **closes the file**. Only one thing on a lifecycle list **runs as long as the system does**, and when a scenario has just described a launch, that's what it's pointing at.
 
 ## What to Remember
 
-- The **standing phase opens at go-live**, covers **operation and maintenance**, and has **no completion criterion**: a system in use needs **watching, answering for and evolving** until it is **switched off**. Development finishes; this does not.
-- A **gate is a decision** to proceed that is only real if it can **refuse**, and it refuses against a **named artifact**: the **constraint with a source**, the **eval score against a baseline**, the **recorded pin**, the **live metric**, the **routed finding**.
-- **Skipping a gate raises no error**. It ships a system that **works on the day** and **cannot be reasoned about later**, which is why **schedule pressure wins** wherever it is allowed to be an argument.
-- **Instrument three quantities** from **day one** of production: **cost per call**, **latency**, **failures**. Cost telemetry is an **approximation** and official **billing comes from the provider**, so trend it, **never reconcile** against it.
-- A **refusal never surfaces** as an **HTTP error**. It arrives on a **successful response stream**, so a failure count built on **transport errors reads flat** while **usable responses fall**. Track **refusals separately**.
-- A **model ID pins the model** for the **lifetime of that ID**, and the guarantee covers IDs rather than the **convenience aliases** accepted for **some earlier models**. Pinning holds **behaviour steady**, not **availability**.
-- **Models retire on Anthropic's schedule**, with at least **60 days' notice** for publicly released models and requests **failing after the retirement date**. **Partner platforms** publish their own dates, so a deployment on **Bedrock or Google Cloud** reads a **different calendar**.
-- Migration between **current models is mostly drop-in**; check **removed features**, **changed thinking behaviour**, **refusal behaviour**. An eval scored against the **outgoing baseline** tells you whether the swap **cost anything**.
-- **Iteration** means a production finding **reaches the requirement it contradicts** and re-enters the arc as a **gated change**. A finding **left in an incident record** is knowledge held by **one person on one shift**.
-- **Retention outlives the application**. Local session **transcripts keep for six years** by default, or for an organization's **configured retention period**, and **Activity Feed data** for six years. Switching a system off **stops traffic** and **settles nothing already stored**.
+- The **standing phase** opens at **go-live**, covers **operation and maintenance**, and has **no end** until the system is switched off. Development finishes; this doesn't.
+- A **gate** is only real if it can **refuse**, and it refuses against something concrete: a **sourced constraint**, an **eval score against a baseline**, a **recorded pin**, **live metrics**, a **routed finding**.
+- **Skipping a gate raises no error.** It ships a system that works today and can't be reasoned about later.
+- **Instrument from day one**: **cost per call**, **latency**, **failures**. Cost telemetry is an **estimate**; billing comes from the provider.
+- **Refusals aren't HTTP errors.** They arrive on successful responses, so **track refusals separately** and check **`stop_reason`**.
+- Every alert needs an **owner**.
+- A **model ID pins behaviour, not availability.** Models retire with **at least 60 days' notice**; requests after retirement **fail**. **Partner platforms have their own dates.** The **API version** moves too.
+- Plan migrations as **backlog items with an owner and a date** inside the notice window. Migration is **mostly drop-in**: check removed features, thinking behaviour and refusals, and **score against the old baseline**.
+- **Production findings go back to the requirements** as gated changes. Left in the incident log, they're folklore.
+- **Retention outlives the application**: transcripts and Activity Feed data are kept for **six years by default**. Switching off **stops traffic, not storage**.
 
 ## Endnotes for this chapter
 
-1. The exported cost metric supports usage-trend tracking, identification of high-usage sessions and attribution of spend, but cost metrics are approximations and official billing data comes from the API provider (Claude Console, Amazon Bedrock, or Google Cloud's Agent Platform). Anthropic, *Monitoring* (Claude Code Docs, accessed 2026-09-10), [https://code.claude.com/docs/en/monitoring-usage](https://code.claude.com/docs/en/monitoring-usage)
+1. The exported cost metric supports trend tracking and spend attribution, but cost metrics are approximations, and official billing data comes from the API provider (Claude Console, Amazon Bedrock, or Google Cloud). Anthropic, *Monitoring* (Claude Code Docs, accessed 2026-09-10; not re-checked for this edition), [https://code.claude.com/docs/en/monitoring-usage](https://code.claude.com/docs/en/monitoring-usage)
 
-2. The API error event is logged when an API request to Claude fails and carries an HTTP status code, which is absent for non-HTTP failures such as connection errors. A refusal returns `stop_reason: "refusal"` and arrives on a successful response stream rather than as an HTTP error, so the API error event does not fire for it; a separate refusal event exists to let refusal frequency be tracked and grouped. Anthropic, *Monitoring* (Claude Code Docs, accessed 2026-09-10), [https://code.claude.com/docs/en/monitoring-usage](https://code.claude.com/docs/en/monitoring-usage)
+2. The API error event is logged when a request fails and carries an HTTP status code; a refusal returns `stop_reason: "refusal"` on a successful response stream, so the API error event doesn't fire, and a separate refusal event lets refusal frequency be tracked. Anthropic, *Monitoring* (Claude Code Docs, accessed 2026-09-10; not re-checked for this edition), [https://code.claude.com/docs/en/monitoring-usage](https://code.claude.com/docs/en/monitoring-usage)
 
-3. Each Claude model ID identifies a pinned version of the model, and the underlying model remains constant for the lifetime of that ID; the guarantee covers model IDs and not the convenience aliases that the Claude API accepts for some earlier models. Anthropic, *Model IDs and versioning* (Claude Platform Docs, accessed 2026-09-10), [https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions](https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions)
+3. Each Claude model ID identifies a pinned version, constant for the lifetime of that ID; the guarantee covers model IDs, not the convenience aliases the Claude API accepts for some earlier models. Anthropic, *Model IDs and versioning* (Claude Platform Docs, accessed 2026-11-27), [https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions](https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions)
 
-4. Anthropic regularly retires older models as newer ones launch, notifies customers with active deployments and provides at least 60 days' notice before retirement for publicly released models, and requests to models past the retirement date will fail. The dates published apply to Anthropic-operated platforms; partner-operated platforms (Amazon Bedrock and Google Cloud) set their own retirement schedules, so a model's lifecycle status and dates can differ. Anthropic, *Model deprecations* (Claude Platform Docs, accessed 2026-09-10), [https://platform.claude.com/docs/en/about-claude/model-deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations)
+4. Anthropic retires older models as newer ones launch, gives customers with active deployments at least 60 days' notice before retiring publicly released models, and requests to retired models fail; on 30 September 2026 Anthropic notified developers using Claude Sonnet 4.5 of its upcoming retirement on the Claude API; partner-operated platforms set their own retirement schedules. Anthropic, *Model deprecations* (Claude Platform Docs, accessed 2026-11-27), [https://platform.claude.com/docs/en/about-claude/model-deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations)
 
-5. Migration to the current models is mostly drop-in, using the same Messages API and tool use patterns, and the key changes to check are the features that are no longer available and thinking output, plus safety classifier refusals where the migration target has them and the previous model did not. Anthropic, *Migration guide* (Claude Platform Docs, accessed 2026-09-10), [https://platform.claude.com/docs/en/about-claude/models/migration-guide](https://platform.claude.com/docs/en/about-claude/models/migration-guide)
+5. Migration to current models is mostly drop-in, using the same Messages API and tool use patterns; the key things to check are features no longer available, thinking output, and safety classifier refusals where the target model has them. Anthropic, *Migration guide* (Claude Platform Docs, accessed 2026-09-10; not re-checked for this edition), [https://platform.claude.com/docs/en/about-claude/models/migration-guide](https://platform.claude.com/docs/en/about-claude/models/migration-guide)
 
-6. Local session transcripts from Cowork and Claude Code on users' machines are stored for six years by default, or for the organization's custom conversation retention period where a finite one is set, and Activity Feed data is retained for six years. Anthropic, *API and data retention* (Claude Platform Docs, accessed 2026-09-10), [https://platform.claude.com/docs/en/manage-claude/api-and-data-retention](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention)
+6. Local session transcripts from Cowork and Claude Code are stored for six years by default, or for an organisation's finite custom retention period, and Activity Feed data is retained for six years. Anthropic, *API and data retention* (Claude Platform Docs, accessed 2026-11-27), [https://platform.claude.com/docs/en/manage-claude/api-and-data-retention](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention)

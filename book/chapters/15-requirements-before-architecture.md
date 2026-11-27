@@ -1,113 +1,146 @@
-# Chapter 15: The Constraints Nobody States Decide the Design
+# Chapter 15: The Constraints Nobody Mentions Decide the Design
 
-**Summary**: *Every system you are asked to change already has properties nobody put in the request, and a cache dropped into a multi-tenant authorization path breaks one of them quietly, months later, once. This chapter covers the two sets of requirements that stand between a business direction and a design you can defend: the behaviours somebody can mark pass or fail, and the deployment constraints that surface only because somebody went and asked. Get the second set late and the repair is a migration, not a setting.*
+**Summary**: *Every system you're asked to change already has properties nobody put in the request. A cache dropped into a multi-tenant authorisation path breaks one of them quietly, months later, once. This chapter covers the two sets of requirements between a business goal and a design you can defend: behaviours someone can mark pass or fail, and deployment constraints that only come out because someone asked. Find out about the second set late, and the fix is a migration, not a setting.*
 
-## The Request Describes the Change and the System Describes the Constraints
+## The Request Describes the Change; the System Holds the Constraints
 
-A **ticket lands**. Put a **cache in front** of the **authorization module**, because the checks are slow and the page waits on them.
+A ticket arrives: **put a cache in front of the authorisation module**, because the checks are slow and the page waits on them.
 
-Read it twice and you still find **nothing missing**. There is a **component**, a **symptom**, a **mechanism** and an **owner**.
+Read it twice and nothing seems missing. There's a component, a symptom, a mechanism and an owner.
 
-Now read the system instead of the ticket. **Several customers share** that deployment. Every **access decision** the module makes is written to a **log somebody audits**. The invalidation already in place does not behave the same way on **every path**, which the team knows and has never written down anywhere.
+Now look at the **system** instead of the ticket. **Several customers share** the deployment. Every access decision is written to a **log someone audits**. The existing invalidation **doesn't behave the same on every path**, which the team knows and has never written down.
 
-None of that was put there for the benefit of this change. It was true last quarter and it will be true after the cache ships. Call it a **standing constraint**: a **property of the environment** that **predates the request**, appears in **nobody's description** of the work, and **decides the design** anyway.
+None of that was put there for this change. It was true last quarter and will be true after the cache ships. This book calls it a **standing constraint**: a property of the environment that **predates the request**, appears in **nobody's description** of the work, and **decides the design** anyway.
 
-A **functional gap announces itself** the first time somebody runs the feature. A standing constraint violated by a cache announces itself when **one tenant** is served **another tenant's decision**, months later, once. **Silent, rare and expensive** is the exact profile of a defect that iteration never catches, because **iteration needs a signal** and this one gives none until it gives a very large one.
+A missing feature announces itself the first time someone uses it. A standing constraint broken by a cache announces itself when **one tenant is shown another tenant's access decision**, months later, once. **Silent, rare and expensive** is exactly the kind of defect iteration never catches, because iteration needs a signal, and this one gives none until it gives a very big one.
 
-So your first move on a change of that shape is **neither code nor a design**. It is a **set of targeted questions**: what has to **stay true**, what **invalidates an entry**, what the **audit trail** must record, and how the module behaves when the **cache is wrong**. Anthropic makes the general form of the point about Claude itself, which needs the same thing for the same reason. Going straight to code produces code that **solves the wrong problem**, so exploration and planning are **separated from execution**.<sup>[1]</sup>
+So your first move on a change like this is **neither code nor a design**. It's a set of **targeted questions**:
 
-## A Goal You Cannot Fail Is Not Yet a Requirement
+- What has to **stay true**? (Can a cached decision for tenant A ever be served to tenant B?)
+- What **invalidates an entry**? (A role change? A revoked key? How fast must it take effect?)
+- What must the **audit log** record? (Is a cache hit still an access decision that must be logged?)
+- What happens when the **cache is wrong**? (Fail open or fail closed?)
 
-A **business problem** is a direction. Get invoices approved sooner. Stop the compliance team reading every document. **Both sentences** are **worth having**, and you can **neither build nor check** a system against either one.
+Anthropic makes the same point about Claude: jumping straight to code produces code that **solves the wrong problem**, so exploration and planning are kept separate from execution.<sup>[1]</sup>
 
-A **functional requirement** says what the system must do, in enough detail that somebody can **mark it pass or fail**. **Deriving them turns** one direction into **several checkable behaviours**: flag each document as needing review or not, quote the clause that triggered a flag, leave a flagged document unapproved until a named reviewer clears it. Each of those can be **run and scored**. The **direction cannot**.
+## A Goal You Can't Fail Isn't a Requirement Yet
 
-The **test is mechanical**, and it is the only one you need. Read the statement, then ask yourself what **observation would show it had been broken**. If nothing would, the statement is a **preference**.
+A **business problem** is a direction: "Get invoices approved sooner." "Stop the compliance team reading every document." Both are worth having, and you can **neither build nor test** a system against either one.
 
-Anthropic sets the same discipline for **success criteria**, and the worked pairs are the fastest way to internalise it. "Good performance" becomes "**accurate sentiment classification**". "Safe outputs" becomes fewer than **0.1% of outputs across 10,000 trials** flagged by the **content filter**.<sup>[2]</sup> The second version of each is **longer**, and length is not what you are buying. It **bought a line** the system can be held to at review.
+A **functional requirement** says what the system must do, precisely enough that someone can **mark it pass or fail**. Deriving requirements turns one direction into several **checkable behaviours**:
 
-The **requirement nobody can fail** is the anti-pattern here, and it is **seductive** because it is **agreeable**. Everybody signs off on fast, accurate and secure. **Nothing has been agreed**. Two humans read one sentence, **build different pictures** from it, and meet the difference at the review where one of them says this is not what was asked for.
+- Flag each document as needing review or not.
+- Quote the clause that triggered each flag.
+- Keep a flagged document unapproved until a named reviewer clears it.
 
-## The Second Set of Requirements Sits on Other People's Desks
+Each of those can be run and scored. The direction can't.
 
-**Functional requirements arrive** on their own, near enough. Whoever wants the feature knows what it should do and will **tell you unprompted**.
+The test is mechanical: read the statement and ask **what observation would show it had been broken**. If nothing would, it's a **preference**, not a requirement.
 
-**Infrastructure requirements bound the deployment** rather than the behaviour. They say nothing about what the system produces and everything about the **conditions** under which producing it is **acceptable**, and hardly any of them are anywhere in the business problem. They come out by **interrogation rather than by reading**, because each one is **obvious** to the human holding it and therefore **never said out loud**. **Four questions** cover most of the ground.
+Anthropic uses the same discipline for success criteria. "Good performance" becomes "accurate sentiment classification". "Safe outputs" becomes "fewer than **0.1% of outputs across 10,000 trials** flagged for toxicity by the content filter".<sup>[2]</sup> The second version is longer, but what it buys is a line the system can be held to.
 
-| The question | Who actually holds the answer | What a late answer costs |
+> **Example.** "The summariser should be fast and accurate" can't fail. "95% of summaries return within 4 seconds at the 95th percentile, and on our 200-ticket test set, a reviewer marks at least 90% as containing every action item" can.
+
+The **requirement nobody can fail** is the mistake here, and it's tempting because it's agreeable. Everyone signs off on "fast, accurate and secure", and nothing has been agreed. Two people read one sentence, picture different systems, and discover the difference at the review where one says "this isn't what I asked for."
+
+## The Second Set of Requirements Is on Other People's Desks
+
+**Functional requirements arrive more or less on their own.** Whoever wants the feature knows what it should do and will tell you unprompted.
+
+**Infrastructure requirements limit the deployment, not the behaviour.** They say nothing about what the system produces, and everything about the **conditions under which producing it is acceptable**. Almost none of them appear in the business problem. You get them by **asking**, not reading, because each one is obvious to the person who holds it, so they never say it. Four questions cover most of the ground:
+
+| The question | Who actually knows | What a late answer costs |
 |---|---|---|
-| How fast, measured where the user is | Whoever owns the experience, and whoever runs the region | A model, a platform or a topology chosen against the wrong number |
-| What volume, and what the peak looks like | Operations, plus whoever keeps the historical figures | Capacity and rate limits sized for the average |
-| Processed where, stored where, under which regulation | Legal, compliance, the data protection function | A rebuild, because some of these settings are fixed at creation |
-| Acting under whose credentials, auditable how | Security, and the owner of the system being acted upon | An audit trail that cannot answer the question it exists for |
+| How fast, measured where the user is? | Whoever owns the user experience, and whoever runs the region | A model, platform or topology chosen against the wrong number |
+| What volume, and what does the peak look like? | Operations, plus whoever has the historical figures | Capacity and rate limits sized for the average |
+| Processed where, stored where, under which regulation? | Legal, compliance, the data protection team | A rebuild, because some settings are fixed at creation |
+| Acting with whose credentials, and audited how? | Security, and the owner of the system being acted on | An audit trail that can't answer the question it exists for |
 
-The third column is the reason this work **belongs at the start** rather than in the middle. Four questions **cost you a conversation**. Their answers, **arriving late**, **cost you a migration**. What gets traded against a latency figure once you hold one is chapter 4's material; obtaining the figure at all is this chapter's.
+The third column is why this work belongs **at the start**. Four questions cost a conversation. Their answers, arriving late, cost a migration. (Chapter 4 covers trading off against a latency figure once you have it; this chapter is about getting it at all.)
 
-One trap in that table looks like **diligence**. A **latency budget** tells you nothing whatsoever about which **tenant** may see which **record**. Performance targets and correctness rules are different kinds of statement, and **correctness inferred from a performance target** is **guessing** with a spreadsheet open.
+One trap looks like diligence. A **latency budget tells you nothing about which tenant may see which record**. Performance targets and correctness rules are different kinds of statement, and inferring correctness from a performance target is guessing with a spreadsheet open.
 
-## A Residency Rule Removes Options and Never Weighs Against Them
+## A Residency Rule Removes Options; It Never Gets Weighed Against Them
 
-**Latency, scale, residency and identity** decide a deployment more often than anything else does, and they do not all behave the same way once **design starts**.
+**Latency, scale, residency and identity** decide deployments more often than anything else, and they don't all behave the same way once design starts.
 
-A **latency target** is a **threshold**. Candidate designs get measured against it, some clear it, and the ones that clear it are then compared on other grounds. A **residency rule** is **not a threshold** at all: it **strikes candidates off the list** before any comparison begins, and whatever survives is compared as though the rule had **never come up**.
+- A **latency target is a threshold.** Designs are measured against it; some pass; the ones that pass are then compared on other grounds.
+- A **residency rule isn't a threshold.** It **removes candidates** before any comparison begins, and whatever survives is compared as if the rule had never come up.
 
-Where **inference runs** and where **data is stored** are two **independent settings**. The first travels on the request: `inference_geo` takes `"us"` or `"global"`, can be set **per call** or as a **workspace default**, is supported from **Claude 4.6 onward** and returns a `400` on earlier models, and US inference is priced at 1.1 times the standard rate. The second does not travel at all. **Workspace geo is fixed at creation** and cannot be changed afterwards.<sup>[3]</sup>
+On the Claude API, **where inference runs** and **where data is stored** are **two independent settings**:<sup>[3]</sup>
 
-Retention has the same shape and **bites harder**. **Zero data retention** is arranged **per organization** through an account team, and enabling it for one organization does **not extend** it to another under the same account. **HIPAA readiness** needs a **signed agreement**, and once enabled the **configuration is permanent** and **no administrator** can switch it off. A request carrying a feature the arrangement does not cover **fails** with a `400` rather than **degrading quietly**.<sup>[4]</sup> Partner platforms move the ground underneath as well: on Amazon Bedrock and Google Cloud the **cloud provider** is the **data processor**, so their **retention documentation** is the one that governs.<sup>[4]</sup>
+- **Inference geo** is set per request with `inference_geo` (`"us"` or `"global"`), or as a workspace default. It's supported on **Claude 4.6 and later**; older models return a `400` if you send it. US-only inference costs **1.1×** standard prices, across input, output, cache writes and cache reads. The Batch API accepts it per request.
+- **Workspace geo** controls where data is **stored at rest** and where endpoint processing (such as image transcoding and code execution) happens. It's **set when the workspace is created and can't be changed**. Currently `"us"` is the only option.
 
-**Residency treated as one factor to balance** is the **standard wrong answer** on this material, and it always arrives dressed as engineering judgement. A faster region. A cheaper platform. A simpler integration. None of the three is an argument, because a constraint of that kind decides which **options are admissible** at all, and the three being weighed had **stopped being options** before anybody weighed them.
+> **Example.** A healthcare customer requires all processing in the US. Setting `default_inference_geo: "us"` on the workspace covers inference. But if the workspace was created without a US workspace geo, its storage location can't be changed; you need a **new workspace**. Learning this in week one is a setting; learning it in month six is a migration.
 
-## The Record Exists Because the Reviewer Was Not in the Room
+**Retention** works the same way, and bites harder:<sup>[4]</sup>
 
-**Requirements get written down** for one reason that survives contact with a busy team. Whoever **reviews a deployment choice** was not in the conversation where its **constraints came out**, and the review is where the choice has to be defended.
+- **Zero data retention (ZDR)** is arranged **per organisation** through Anthropic's account team. Enabling it for one organisation doesn't extend it to another under the same account.
+- **HIPAA readiness** needs a **signed business associate agreement**, and once enabled it's **permanent**; no administrator can turn it off.
+- A request that uses a **feature the arrangement doesn't cover fails with a `400`**, rather than quietly degrading. Some features, such as Managed Agents (chapter 13), aren't covered at all.
+- On **Amazon Bedrock and Google Cloud**, the cloud provider is the data processor, so **their** retention documentation applies.
 
-A short record does the job: the **behaviours the system must exhibit**, the **infrastructure constraints**, and which **regulation** or which **owner** each constraint came from. With it, your **platform choice** reads as a **consequence** of the requirements. Without it, it reads as **familiarity**, and familiarity is precisely what a reviewer **pushes** on.
+**Treating residency as one factor to balance** is the standard wrong answer, and it always looks like engineering judgement: a faster region, a cheaper platform, a simpler integration. None of those is an argument, because the constraint decides which options are **allowed at all**, and the ones being weighed stopped being options before anyone weighed them.
 
-That record has to **stay current**, because **configuration does not retro-fit** itself. **Permission policies** show the general behaviour cleanly: tightening a policy on an agent governs **sessions created after the change**, while sessions already running **keep the configuration** they started with.<sup>[5]</sup> Operating your own infrastructure carries the same asymmetry. Once session content reaches a **self-hosted worker** it is retained, redacted or deleted under the **operator's own policies**, and Anthropic has no visibility into what happens to it after delivery.<sup>[6]</sup>
+## Write It Down, Because the Reviewer Wasn't in the Room
 
-None of this scales down to every ticket, and pretending it does is how the discipline gets abandoned wholesale. Anthropic's calibration is a good one to borrow: **planning earns its overhead** when the approach is **uncertain**, when the change touches **several files**, or when the code is **unfamiliar**, and a change whose **diff fits in one sentence** should skip it.<sup>[1]</sup> **Multiple tenants**, an **audit obligation** and **behaviour nobody describes** the same way twice clear that bar three times over.
+Requirements get written down for one reason that survives a busy team: **whoever reviews a deployment choice wasn't in the conversation** where its constraints came out, and the review is where the choice has to be defended.
 
-## How Wrong Answers Are Built on This Material
+A short record is enough:
 
-Wrong answers on requirements **describe good engineering**. Prototyping, staged rollout, monitoring and reuse are all things **competent teams** do, which is why they survive a first read. What makes one wrong is what it **assumes has already been established**.
+- the **behaviours** the system must show;
+- the **infrastructure constraints**;
+- **where each constraint came from** (which regulation, which owner).
 
-- The **unstated property assumed absent**. The option **treats the system** as though the only **things true** of it are the ones the **request mentioned**. Iterating toward a fix, shipping behind a flag and building a small version first all **belong to a system whose invariants are known**. **Each becomes correct** once the **change is reversible** and the **damage is loud and contained**.
-- **Discovery relocated to after the build**. Monitoring, incident review and a canary release do **find constraints**. They find them by **violating one**. **Fair trade** when a failure is **cheap, quick and visible**; **bad trade** when it is **silent, rare and consequential**, which is the profile every **tenancy and audit scenario** is built on.
-- A **constraint inferred instead of elicited**. **Reading correctness rules** off a performance target, off a neighbouring module's implementation, or off what the previous team wrote. **Copying an approach imports its assumptions** along with its **structure**, and an **authorization path** is where an **imported assumption does the most damage**.
-- A **hard constraint weighed as a preference**. A **regulation**, a **jurisdiction** or a **retention obligation** offered as **one input to a tradeoff** against cost, latency or effort. Constraints of that kind **produce the candidate list**; they **never compete** inside it.
+With it, your platform choice reads as a **consequence of the requirements**. Without it, it reads as **habit**, and habit is exactly what a reviewer pushes on.
+
+The record must **stay current**, because configuration doesn't update itself retroactively. In Managed Agents, tightening a permission policy governs **sessions created after the change**; sessions already running **keep their original configuration**.<sup>[5]</sup> Self-hosting has the same asymmetry: once session content reaches your worker, keeping, redacting or deleting it is **your** policy, and Anthropic has no visibility into what happens next.<sup>[6]</sup>
+
+None of this applies to every ticket, and pretending it does is how teams abandon the discipline altogether. Anthropic's calibration is worth borrowing: planning earns its overhead when the approach is **uncertain**, the change touches **several files**, or the code is **unfamiliar**. A change whose diff fits in one sentence should skip it.<sup>[1]</sup> **Multiple tenants, an audit requirement and behaviour nobody describes the same way twice** clear that bar three times over.
+
+## How the Exam Builds Wrong Answers
+
+Wrong answers here describe good engineering: prototyping, staged rollout, monitoring and reuse. What makes one wrong is **what it assumes is already known**.
+
+- **The unstated property assumed absent.** The option treats the system as if the only true facts are the ones the request mentioned. Iterating, shipping behind a flag, and building a small version first all belong to a system whose invariants are known. Each becomes correct once the change is **reversible** and the damage is **loud and contained**.
+- **Discovery moved to after the build.** Monitoring, incident review and canary releases do find constraints, **by breaking one**. That's a fair trade when failure is cheap, quick and visible; a bad trade when it's **silent, rare and consequential**, which is the profile of every tenancy and audit scenario.
+- **A constraint guessed instead of asked for.** Reading correctness rules off a performance target, a neighbouring module, or what the last team wrote. Copying an approach **imports its assumptions** too, and an authorisation path is where imported assumptions do the most damage.
+- **A hard constraint weighed as a preference.** A regulation, jurisdiction or retention rule offered as one input to a trade-off against cost, latency or effort. Those constraints **produce the list of candidates**; they never compete inside it.
 
 | When the scenario says | The answer is usually | The trap is usually |
 |---|---|---|
-| Properties the request never mentioned: several tenants, an audit trail, behaviour that varies by path | Elicit the invariants, the invalidation rules, the audit obligation and the failure modes first | Iterating, prototyping or shipping behind a flag, all of which learn the same facts from an incident |
-| A goal stated as faster, better, accurate or seamless | Convert it into behaviours somebody can mark pass or fail | Accepting the goal as the requirement and moving on to mechanism |
-| A regulation, a jurisdiction or a retention obligation anywhere in the setup | Treat it as the filter that produces the candidate list | Balancing it against latency or cost as though every input were commensurate |
-| Functional behaviour fully specified and a platform decision due | Obtain latency, volume, residency and identity, then decide | Choosing on familiarity, existing tooling, or what shipped last time |
-| Somebody proposes copying an approach from a neighbouring system | Check which of that system's assumptions actually hold here | Reuse justified by similarity of shape rather than shared invariants |
-| A design is defensible inside the team and opaque outside it | Write the record, naming the source of every constraint | Documenting the decision without the constraints that forced it |
+| Properties the request didn't mention: several tenants, an audit trail, behaviour that varies by path | Ask about invariants, invalidation, the audit obligation and failure modes first | Iterating, prototyping or a feature flag, which learn the same facts from an incident |
+| A goal stated as faster, better, accurate or seamless | Turn it into behaviours someone can mark pass or fail | Accepting the goal as the requirement and moving on to mechanism |
+| A regulation, jurisdiction or retention rule appears anywhere | Use it as the filter that produces the candidate list | Balancing it against latency or cost |
+| Behaviour is fully specified and a platform decision is due | Get latency, volume, residency and identity, then decide | Choosing by familiarity, existing tools, or what shipped last time |
+| Someone proposes copying an approach from a neighbouring system | Check which of that system's assumptions hold here | Reuse justified by similar shape, not shared invariants |
+| A design makes sense inside the team but not outside it | Write the record, naming the source of every constraint | Documenting the decision without the constraints that forced it |
 
-One habit carries past the table. For each option, ask what it **needs you to know already**, then check whether the scenario said that thing was **settled** or said that **nobody had established** it.
+One habit works beyond the table. For each option, ask **what it needs you to know already**, then check whether the scenario said that was **settled** or said **nobody had established it**.
 
 ## What to Remember
 
-- A **standing constraint** is a **property of the environment** that **predates the request**, appears in **no description** of the work, and **decides the design** regardless. **Multiple tenants**, an **audit obligation** and **inconsistent existing behaviour** are the three that recur.
-- **Elicit before implementing** wherever a mistake would be **silent, rare and expensive**. Iteration **needs a signal**; a **tenancy or authorization defect emits none** until it emits a large one.
-- A **functional requirement** names the **behaviour the system must exhibit**, written so somebody can **mark it pass or fail**. Test it by asking what **observation would prove it broken**; if none exists, it is a **preference, not a requirement**.
-- **Infrastructure requirements bound the deployment**, not the behaviour: they fix the **conditions** under which producing the output is **acceptable**. They are **obtained by asking**, never by reading, because **each is obvious** to whoever **holds** it. The four: **latency measured at the user**, **volume at peak**, **processing and storage location** under a **named regulation**, and whose **credentials act**, with what **audit record**.
-- A **residency, retention or identity rule** decides which options are **admissible**. **Speed, cost and familiarity** order what survives the rule and **never overturn** it.
-- Where **inference runs** and where **data is stored** are **separate settings**. `inference_geo` is **per request** or **per workspace default**; **workspace geo is fixed at creation** and cannot be changed, so a residency answer **arriving late costs a rebuild** rather than a config change.
-- A **performance target** implies **no correctness rule**. A **latency budget** says nothing about which **tenant** may see which **record**, and **inferring one from the other** is guessing.
-- **Requirements are recorded** because whoever **reviews the decision** was **absent** when the **constraints were gathered**. The record holds the **behaviours**, the **constraints**, and the **source of each constraint**, which is what turns a **platform choice into a consequence** rather than a **habit**.
+- A **standing constraint** is a property of the environment that **predates the request**, isn't mentioned, and **decides the design**. The usual three: **multiple tenants**, an **audit obligation**, and **inconsistent existing behaviour**.
+- **Ask before building** wherever a mistake would be **silent, rare and expensive**. Iteration needs a signal; a tenancy or authorisation bug gives none until it gives a big one.
+- A **functional requirement** can be **marked pass or fail**. Test it by asking what observation would prove it broken; if none, it's a **preference**.
+- **Infrastructure requirements** limit the deployment, not the behaviour, and come from **asking**: **latency at the user**, **peak volume**, **processing and storage location under a named regulation**, and **whose credentials act, with what audit record**.
+- **Residency, retention and identity rules decide which options are allowed.** Speed, cost and familiarity only rank what survives.
+- **Inference location and storage location are separate.** `inference_geo` is per request or workspace default (1.1× for US-only, Claude 4.6+). **Workspace geo is fixed at creation**, so a late residency answer costs a **rebuild**.
+- **ZDR is per organisation; HIPAA readiness is permanent once on**; uncovered features return a `400`.
+- **A performance target implies no correctness rule.** A latency budget says nothing about which tenant may see which record.
+- **Write requirements down** for the reviewer who wasn't there: behaviours, constraints, and the **source** of each constraint. That makes a platform choice a **consequence**, not a habit.
 
 ## Endnotes for this chapter
 
-1. Letting Claude jump straight to coding can produce code that solves the wrong problem, so plan mode separates exploration from execution; planning is most useful when the approach is uncertain, when the change modifies multiple files, or when the code being modified is unfamiliar, and a change whose diff could be described in one sentence should skip the plan. Anthropic, *Best practices for Claude Code* (Claude Code Docs, accessed 2026-09-09), [https://code.claude.com/docs/en/best-practices](https://code.claude.com/docs/en/best-practices)
+1. Jumping straight to code can produce code that solves the wrong problem, so plan mode separates exploration from execution; planning helps when the approach is uncertain, the change spans multiple files, or the code is unfamiliar, and a change describable in one sentence should skip it. Anthropic, *Best practices for Claude Code* (Claude Code Docs, accessed 2026-09-09; not re-checked for this edition), [https://code.claude.com/docs/en/best-practices](https://code.claude.com/docs/en/best-practices)
 
-2. Good success criteria are specific and measurable: "good performance" is replaced by "accurate sentiment classification", and "safe outputs" by less than 0.1% of outputs out of 10,000 trials flagged for toxicity by the content filter. Anthropic, *Define success criteria and build evaluations* (Claude Platform Docs, accessed 2026-09-09), [https://platform.claude.com/docs/en/test-and-evaluate/develop-tests](https://platform.claude.com/docs/en/test-and-evaluate/develop-tests)
+2. Good success criteria are specific and measurable: "good performance" becomes "accurate sentiment classification", and "safe outputs" becomes less than 0.1% of outputs out of 10,000 trials flagged for toxicity. Anthropic, *Define success criteria and build evaluations* (Claude Platform Docs, accessed 2026-09-09; not re-checked for this edition), [https://platform.claude.com/docs/en/test-and-evaluate/develop-tests](https://platform.claude.com/docs/en/test-and-evaluate/develop-tests)
 
-3. Two independent settings govern where data is processed and stored. The `inference_geo` parameter accepts `"us"` or `"global"`, can be sent on a request or set as a workspace default, is supported on Claude 4.6 and later models and returns a `400` error on earlier ones, and US inference is priced at 1.1 times the standard rate across all token pricing categories. Workspace geo is set when a workspace is created and cannot be changed afterwards. Anthropic, *Data residency* (Claude Platform Docs, accessed 2026-09-09), [https://platform.claude.com/docs/en/manage-claude/data-residency](https://platform.claude.com/docs/en/manage-claude/data-residency)
+3. Two independent settings govern data residency: inference geo, set per request with `inference_geo` or as a workspace default (`default_inference_geo`), and workspace geo, which controls where data is stored at rest and where endpoint processing such as image transcoding and code execution happens. Workspace geo is set at creation and can't be changed; `"us"` is currently the only workspace geo. For Claude 4.6 and later, `inference_geo: "us"` costs 1.1x standard pricing across all token categories, `"global"` uses standard pricing, and older models return a 400 if the parameter is sent. The Batch API supports `inference_geo` per request. Anthropic, *Data residency* (Claude Platform Docs, accessed 2026-11-27), [https://platform.claude.com/docs/en/manage-claude/data-residency](https://platform.claude.com/docs/en/manage-claude/data-residency)
 
-4. Zero data retention is enabled per organization by an account team, and enablement does not automatically extend to other organizations under the same account. HIPAA readiness requires a signed business associate agreement, and once enabled the configuration is permanent and cannot be disabled by an administrator; a request that uses a feature outside the arrangement returns a `400` error. On Amazon Bedrock and Google Cloud's Agent Platform the cloud provider is the data processor, and those platforms' own retention and compliance documentation applies. Anthropic, *API and data retention* (Claude Platform Docs, accessed 2026-09-09), [https://platform.claude.com/docs/en/manage-claude/api-and-data-retention](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention)
+4. ZDR is enabled per organisation by an account team and doesn't extend to other organisations under the same account; HIPAA readiness requires a signed business associate agreement, is permanent once enabled, and requests using uncovered features return a 400; Claude Managed Agents is covered by neither; on Amazon Bedrock and Google Cloud the cloud provider is the data processor. Anthropic, *API and data retention* (Claude Platform Docs, accessed 2026-11-27), [https://platform.claude.com/docs/en/manage-claude/api-and-data-retention](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention)
 
-5. Permission policies are set in the agent's tools configuration and can be changed later by updating the agent; running sessions keep the toolset configuration they were created with, and updates apply to sessions created afterwards. Anthropic, *Permission policies* (Claude Platform Docs, accessed 2026-09-09), [https://platform.claude.com/docs/en/managed-agents/permission-policies](https://platform.claude.com/docs/en/managed-agents/permission-policies)
+5. Running sessions keep the toolset configuration they were created with; permission policy updates apply to sessions created afterwards. Anthropic, *Permission policies* (Claude Platform Docs, accessed 2026-09-09; not re-checked for this edition), [https://platform.claude.com/docs/en/managed-agents/permission-policies](https://platform.claude.com/docs/en/managed-agents/permission-policies)
 
-6. Under the shared responsibility model for self-hosted sandboxes, conversation content and tool outputs pass through the operator's worker and stay in the operator's environment, which makes retaining, redacting or deleting that data in line with the operator's own policies their responsibility; Anthropic has no visibility into what a worker does with session content once it has been delivered. Anthropic, *Security model* (Claude Platform Docs, accessed 2026-09-09), [https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes-security](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes-security)
+6. For self-hosted sandboxes, session content passes through the operator's worker, and retaining, redacting or deleting it is the operator's responsibility; Anthropic has no visibility into what the worker does with it. Anthropic, *Security model* (Claude Platform Docs, accessed 2026-09-09; not re-checked for this edition), [https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes-security](https://platform.claude.com/docs/en/managed-agents/self-hosted-sandboxes-security)
