@@ -2,56 +2,54 @@
 
 ## Software Wrote This
 
-A language model wrote this book. Every chapter, every table, every sentence.
+A language model wrote this book: every chapter, every table, every sentence. This edition was also updated and rewritten by a language model, in November 2026, to match the current documentation and to read more simply.
 
-That belongs at the front rather than in a note at the back, because it changes what you should do with what follows. **Check things.** Every claim taken from Anthropic's documentation carries a numbered reference to the page it came from, and those references exist so you can open them, not so a paragraph looks well dressed. A book written by software that asks to be believed is asking for something it has not earned.
+That belongs at the front, because it changes how you should read what follows. **Check things.** Every claim taken from Anthropic's documentation has a numbered endnote with a link to the page it came from. The links are there so you can open them. A book written by software shouldn't ask you to just believe it.
 
-What software turns out to be good at is the job this book needed done: reading a large body of documentation closely, holding all of it at once, and noticing where two pages say different things. There are places in here where they do. Where that happened, this book says so and names which page it followed, rather than picking the tidier one and moving on.
+Software is good at the job this book needed: reading a lot of documentation closely, keeping all of it in view, and noticing where two pages disagree. Where that happened, the book says so and names the page it followed.
 
-What software is bad at is knowing the edge of what it knows. That is what the references are for, and it is why one instruction outranked every other rule this book was written under: **no invented specifics**. No company, no customer, no incident, no benchmark, no measurement that is not in a source you can go and read. Where a scenario appears it is openly hypothetical, and where a figure appears it came from somewhere named.
+Software is bad at knowing the limits of what it knows. That's what the endnotes are for, and it's why one rule came before all others: **no invented facts**. No made-up company, customer, incident, benchmark or measurement. When a scenario appears, it's clearly marked as an example. When a real figure appears, it comes from a named source. Some examples use made-up numbers to show the arithmetic, and they say so.
 
 ## Who This Is For
 
-You have the exam booked, or you are deciding whether to book it. That is the only reader considered here, and it settled every argument about what to include.
+You've booked the exam, or you're deciding whether to. You're the only reader this book was written for, and that settled every question about what to include.
 
-The exam is **53 items in 120 minutes**, multiple choice and multiple response, each item telling you how many answers to select. It is scored 100 to 1,000 and **720 passes**. Behind it sits a published blueprint of **8 domains and 25 skills**, with a weight given for each skill rather than only for each domain, which is finer detail than most certifications hand out. This book is organised around that blueprint and the back matter maps every skill to the chapter that owns it.
+The exam has **53 items in 120 minutes**. They're multiple choice and multiple response, and each item tells you how many answers to pick. Scores run from 100 to 1,000, and **720 passes**. The exam follows a published blueprint of **8 domains and 25 skills**, with a weight for each skill. This book is organised around that blueprint, and the coverage map at the back shows which chapter covers each skill.
 
-One rule governed the writing. Every paragraph had to **earn its place against something the exam tests**. Not against being interesting, not against being complete, not against sounding thorough. A passage that would not help you answer something you would otherwise miss is not in here.
+One rule guided the writing: every section has to **help with something the exam tests**. Not just be interesting, complete or thorough. If a passage wouldn't help you answer a question you'd otherwise miss, it isn't here.
 
-There is good writing on building with these models and almost none of it is arranged around what you will be asked. This is not a survey. It is roughly **72,000 words** aimed at 25 named skills, which is a weekend to read and an evening to skim again. The length is a decision, not an accident: **a book you finish beats a book you admire**, and the ground is wide enough that a complete treatment would never be read by the person who most needs it.
+There's plenty of good writing about building with these models, but almost none of it is organised around what you'll be asked. This book is a weekend to read and an evening to skim again. The length is deliberate: **a book you finish beats a book you admire**.
 
 ## What the Exam Is Actually Like
 
-Two properties of this exam shape the whole book, and both are worth knowing before chapter 1.
+Two things about this exam shape the whole book.
 
-**Nearly every wrong answer is a mechanism that works.** Options are not built from nonsense. They are built from real features used one step out of place: a Skill where a server was needed, a context file where a hook was needed, a retry where the failure was permanent. So knowing that a mechanism exists is worth very little here, and knowing what it is for is worth almost everything.
+**Almost every wrong answer is something that really works.** The options aren't nonsense. They're real features used in the wrong place: a Skill where a server was needed, a context file where a hook was needed, a retry where the failure was permanent. Knowing that a feature exists is worth very little. Knowing what it's *for* is worth almost everything.
 
-**A third of it is not about Claude.** Domain 2 alone is **33.1%** and it covers REST semantics, versioning, review discipline and application boundaries. Domain 4, which covers evaluation, testing and debugging, is **2.6%**. That is a thirteen-fold spread, and a reader who budgets study time by how interesting a topic is will spend their evenings in the wrong place. The coverage map at the back prints every weight so you can spend them deliberately.
+> **Example.** A question asks how to make sure Claude Code *never* runs `rm -rf` in a project. One option adds "Never run rm -rf" to `CLAUDE.md`. That really works most of the time: Claude reads the file and usually follows it. But "usually" isn't "never". The correct answer is a hook, which runs as code and blocks the command every time. Both are real features. Only one fits the word "never".
+
+**A third of the exam isn't about Claude.** Domain 2 alone is **33.1%**, and it covers REST, versioning, code review and application boundaries. Domain 4, on evaluation, testing and debugging, is just **2.6%**. That's a thirteen-fold difference. If you plan your study time by what seems interesting, you'll spend it in the wrong places. The coverage map at the back lists every weight so you can plan on purpose.
 
 ## How a Chapter Is Built
 
-Every chapter has the same parts in the same order, so you can drop into one you have not read.
+Every chapter has the same parts in the same order, so you can jump into any one of them.
 
-An **italic summary**. What decision the chapter settles, and what getting it wrong costs.
-
-**Sections whose headers state their point.** No teasers. A header that means nothing until you have read the section under it is dead weight in a book somebody revises from, and if you find one it is a defect.
-
-**Tables wherever the material is parallel.** A table does in forty words what prose needs four hundred for, and there is a lot of ground here.
-
-**Named failure shapes, in bold.** These carry more than they look. Wrong answers are built out of plausible mistakes, and a mistake you can name is one you can spot in an option list you have never seen.
-
-A section called **How Wrong Answers Are Built on This Material**. Families of assumption that wrong answers rest on, then a table: what the scenario says, what the answer usually is, what the trap usually is. Those rows are written as **cues rather than cases**, so they still fire on a scenario set in an industry this book never mentions.
-
-A closing list called **What to Remember**. Marked densely, and written so every line stands up with the chapter shut, because that is the one condition under which anybody reads such a list.
+- **An italic summary**: what decision the chapter covers, and what getting it wrong costs.
+- **Headings that state their point.** You can read the headings alone as a summary.
+- **Tables** wherever things are being compared.
+- **Examples** where an idea is abstract: a worked case, some arithmetic or a short code snippet.
+- **Named mistakes, in bold.** Wrong answers are built from believable mistakes. A mistake you can name is one you can spot in an option you've never seen before.
+- **How the Exam Builds Wrong Answers**: the assumptions wrong answers rely on, then a table of *what the scenario says*, *what the answer usually is* and *what the trap usually is*. The rows are written as general cues, so they work for scenarios in any industry.
+- **What to Remember**: a short closing list, written so each line makes sense with the chapter closed.
 
 ## How to Read It
 
-**With time**, read in order. The chapters follow the sequence you meet the decisions in when you build something, so each leans on the last.
+**If you have time**, read in order. The chapters follow the order you'd make these decisions when building something, so each one builds on the last.
 
-**Without time**, read the closing lists first, all twenty-three, then read the chapters behind any line you could not defend on your own. The book was built to survive being used that way.
+**If you're short on time**, read all twenty-three "What to Remember" lists first. Then read the chapters behind any line you couldn't explain on your own.
 
-**Chasing one weakness**, go to the coverage map, find the skill, and read the chapter that owns it.
+**If you're fixing one weak area**, find the skill in the coverage map and read the chapter that covers it.
 
-One honest caveat. **Anthropic's documentation moves.** Numbers change, features ship, pages get reorganised. Everything cited here was read on the dates in the references and some of it will have changed by the time you read this. The reasoning outlives the figures, which is why the reasoning is where the pages went. When a number matters to your answer, follow the link.
+One honest warning: **Anthropic's documentation changes.** Models get replaced, prices move, features ship and pages get reorganised. Everything here was checked on the dates in the endnotes, and some of it will have changed by the time you read it. The reasoning lasts longer than the numbers, which is why most of the pages go to reasoning. When a number matters to your answer, follow the link.
 
-Now go and be wrong cheaply, here, rather than expensively, in an exam room.
+Now go and be wrong cheaply, here, rather than expensively, in the exam room.

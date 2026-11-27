@@ -106,8 +106,8 @@ Chapter 1 showed that **model, thinking and effort** are separate settings. For 
 
 **Thinking** works differently depending on the model:
 
-- **Opus 5.5 and Fable 5.2 always think.** Sending `thinking: {"type": "disabled"}` or a manual `budget_tokens` value returns a `400` error. You control thinking depth with effort instead.<sup>[5]</sup><sup>[1]</sup>
-- Sonnet 5.5 and Haiku 5.5 use adaptive thinking, where the model decides how much to think.<sup>[1]</sup>
+- **Opus 5.5, Sonnet 5.5 and Fable 5.2 always think.** Sending `thinking: {"type": "disabled"}` or a manual `budget_tokens` value returns a `400` error. You control thinking depth with effort instead.<sup>[5]</sup><sup>[1]</sup><sup>[11]</sup>
+- **Haiku 5.5** thinks by default too, but it accepts `thinking: {"type": "disabled"}` at effort `high` or below.<sup>[11]</sup>
 
 ### Fast mode: pay for speed, keep the same quality
 
@@ -214,7 +214,7 @@ One habit works beyond this table: for every option, ask which of the three targ
 - The current lineup, cheapest first: **Haiku 5.5, Sonnet 5.5, Opus 5.5, Fable 5.2**. **Start with Opus 5.5** and let evals move you up or down. Check the lineup when you build, because it changes.
 - Compare **cost per finished task**, not per token. Price the **hardest 10%**, because failed tasks bill their tokens, the retry and the downstream damage.
 - **Let an eval decide** model changes in both directions. Upgrading to a newer model is often the cheapest win.
-- **Opus 5.5 and Fable 5.2 always think.** Disabling thinking returns a `400`; use effort instead. Opus 5.5 and Haiku 5.5 default to `medium` effort.
+- **Opus 5.5, Sonnet 5.5 and Fable 5.2 always think.** Disabling thinking returns a `400`; use effort instead. Haiku 5.5 can turn thinking off at `high` effort or below. Opus 5.5 and Haiku 5.5 default to `medium` effort.
 - **Fast mode buys speed only**: same model, same quality, up to 2.5 times the output speed, at twice the price.
 - A **dateless model ID is a fixed snapshot**, not a pointer to the newest model. Older short names are aliases to the latest dated snapshot. The weights stay fixed, but the serving system around them doesn't.
 - **Upgrades change behaviour, not just the ID.** Loud breaks are `400` errors (disabled thinking, forced tool choice, sampling parameters, prefill). Quiet costs come from old prompts that newer models follow too literally. **Retired models fail** after at least 60 days' notice.
@@ -239,4 +239,6 @@ One habit works beyond this table: for every option, ask which of the three targ
 
 9. Claude Sonnet 4.5 retiring on the Claude API on November 30, 2026, and Claude Opus 4.5 on January 22, 2027. Anthropic, *Claude Platform release notes* (Claude Platform Docs, accessed 2026-11-27), [https://platform.claude.com/docs/en/release-notes/overview](https://platform.claude.com/docs/en/release-notes/overview)
 
-10. Non-default `temperature`, `top_p` or `top_k` and assistant-message prefill returning a `400` error on Claude Opus 4.7 and later. Anthropic, *Migration guide* (Claude Platform Docs, accessed 2026-09-09; not re-checked for this edition), [https://platform.claude.com/docs/en/about-claude/models/migration-guide](https://platform.claude.com/docs/en/about-claude/models/migration-guide)
+10. Non-default `temperature`, `top_p` or `top_k` returning a `400` error starting with Claude Opus 4.7; and a request to Claude Sonnet 5.5 that leaves out the five settings returning a `400` error: thinking budgets, sampling parameters, assistant prefill, forced tool choice and disabled thinking. Anthropic, *Migration guide* and *Claude Sonnet 5.5 migration guide* (Claude Platform Docs, accessed 2026-11-27), [https://platform.claude.com/docs/en/about-claude/models/migration-guide](https://platform.claude.com/docs/en/about-claude/models/migration-guide); [https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide](https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide)
+
+11. Thinking support by model: Claude Sonnet 5.5 returns a `400` for disabled thinking; Claude Haiku 5.5 supports adaptive thinking only, defaults to on, and accepts `disabled` at effort `high` or below. Anthropic, *Troubleshooting thinking* and *Claude Sonnet 5.5 migration guide* (Claude Platform Docs, accessed 2026-11-27), [https://platform.claude.com/docs/en/build-with-claude/thinking-troubleshooting](https://platform.claude.com/docs/en/build-with-claude/thinking-troubleshooting); [https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide](https://platform.claude.com/docs/en/models/sonnet-5-5/migration-guide)
